@@ -13,7 +13,7 @@ app.get('/(%d+)', function(req, res)
    local number = tonumber(req.params[1])
    local result = tostring(fib(number))
    res.header('Content-Type', 'text/html')
-   res.send("ASyNC + Waffle<hr> fib(" .. tostring(number) .. "): " .. result)
+   res.send('ASyNC + Waffle<hr> fib(' .. tostring(number) .. '): ' .. result)
 end)
 
 app.listen()

@@ -1,6 +1,5 @@
 local app = require('../waffle')
 app.set('debug', true)
-app.set('public', './public')
 
 app.get('/', function(req, res)
    res.header('Content-Type', 'text/html')
