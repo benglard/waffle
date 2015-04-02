@@ -16,6 +16,8 @@ paths.add = function(p1, p2)
 end
 
 paths.walk = function(dir, files)
+   assert(dir ~= nil)
+   
    local files = files or {}
    for f in paths.files(dir) do
       if f ~= '.' and f ~= '..' then

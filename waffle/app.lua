@@ -9,6 +9,9 @@ app.viewFuncs = {}
 app.errorFuncs = {}
 
 app.set = function(field, value)
+   assert(field ~= nil)
+   assert(value ~= nil)
+
    app.properties[field] = value
 
    if field == 'public' then
@@ -41,9 +44,11 @@ local _handle = function(request, handler)
       if b1 and (not(b2) or b3) then
          request.params = match
          request.url.args = {}
-         for param in string.gsplit(request.url.query, '&') do
-            local arg = string.split(param, '=')
-            request.url.args[arg[1]] = arg[2]
+         if request.url.query then
+            for param in string.gsplit(request.url.query, '&') do
+               local arg = string.split(param, '=')
+               request.url.args[arg[1]] = arg[2]
+            end
          end
 
          if funcs[method] then
@@ -79,6 +84,10 @@ app.listen = function(options)
 end
 
 app.serve = function(url, method, cb)
+   assert(url ~= nil)
+   assert(method ~= nil)
+   assert(cb ~= nil)
+
    if app.viewFuncs[url] == nil then
       app.viewFuncs[url] = {}
    end
@@ -98,6 +107,9 @@ app.delete = function(url, cb) app.serve(url, 'DELETE', cb)
 end
 
 app.error = function(errorCode, cb)
+   assert(errorCode ~= nil and async.http.codes[errorCode] ~= nil)
+   assert(cb ~= nil)
+
    app.errorFuncs[errorCode] = cb
 end
 
