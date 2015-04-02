@@ -2,6 +2,7 @@ local async = require 'async'
 local response = require 'waffle.response'
 local paths = require 'waffle.paths'
 local string = require 'waffle.string'
+local utils = require 'waffle.utils'
 
 local app = {}
 app.properties = {}
@@ -9,8 +10,8 @@ app.viewFuncs = {}
 app.errorFuncs = {}
 
 app.set = function(field, value)
-   assert(field ~= nil)
-   assert(value ~= nil)
+   utils.stringassert(field)
+   utils.stringassert(value)
 
    app.properties[field] = value
 
@@ -71,12 +72,8 @@ end
 
 app.listen = function(options)
    local options = options or {}
-   local host, port
-
-   if (options.host) then host = options.host
-   else host = '127.0.0.1' end
-   if (options.port) then port = options.port
-   else port = '8080' end
+   local host = options.host or '127.0.0.1'
+   local port = options.port or '8080'
 
    async.http.listen({host=host, port=port}, _handle)
    print(string.format('Listening on %s:%s', host, port))
@@ -84,8 +81,8 @@ app.listen = function(options)
 end
 
 app.serve = function(url, method, cb)
-   assert(url ~= nil)
-   assert(method ~= nil)
+   utils.stringassert(url)
+   utils.stringassert(method)
    assert(cb ~= nil)
 
    if app.viewFuncs[url] == nil then

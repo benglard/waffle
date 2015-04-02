@@ -16,7 +16,7 @@ paths.add = function(p1, p2)
 end
 
 paths.walk = function(dir, files)
-   assert(dir ~= nil)
+   utils.stringassert(dir)
    
    local files = files or {}
    for f in paths.files(dir) do

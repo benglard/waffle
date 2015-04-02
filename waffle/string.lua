@@ -2,8 +2,8 @@ local string = require 'string'
 local utils = require 'waffle.utils'
 
 string.split = function(text, pattern)
-   assert(text ~= '')
-   assert(pattern ~= '')
+   utils.stringassert(text)
+   utils.stringassert(pattern)
    
    local start = 1
    local patStart, patEnd = string.find(text, pattern, 1)

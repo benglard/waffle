@@ -13,4 +13,8 @@ utils.iterator = function(f)
    end
 end
 
+utils.stringassert = function(str)
+   assert(str ~= nil and type(str) == 'string' and str ~= '')
+end
+
 return utils
