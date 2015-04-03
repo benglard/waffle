@@ -8,6 +8,7 @@ local app = {}
 app.properties = {}
 app.viewFuncs = {}
 app.errorFuncs = {}
+app.urlCache = {}
 
 app.set = function(field, value)
    utils.stringassert(field)
@@ -32,6 +33,16 @@ local _handle = function(request, handler)
    response.new()
    response.setHandler(handler)
 
+   for pattern, funcs in pairs(app.urlCache) do
+      local cache = funcs[method]
+      if cache ~= nil then
+         request.params = cache.params
+         request.url.args = cache.args
+         cache.cb(request, response)
+         return nil
+      end
+   end
+
    for pattern, funcs in pairs(app.viewFuncs) do
       local match = {string.match(url, pattern)}
       local b1 = #match > 0
@@ -52,14 +63,22 @@ local _handle = function(request, handler)
             local ok, err = pcall(function() 
                funcs[method](request, response) 
             end)
-            if not(ok) then
+            if ok then
+               local cache = {
+                  cb = funcs[method],
+                  params = match,
+                  args = request.url.args
+               }
+               if app.urlCache[url] == nil then app.urlCache[url] = {} end
+               app.urlCache[url][method] = cache
+            else
                if app.properties.debug then print(err) end
                app.abort(500, err, request, response) 
             end
          else app.abort(403, 'Forbidden', request, response)
          end
 
-         return
+         return nil
       end
    end
 
