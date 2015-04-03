@@ -11,18 +11,14 @@ app.errorFuncs = {}
 
 app.set = function(field, value)
    utils.stringassert(field)
-   utils.stringassert(value)
-
    app.properties[field] = value
 
    if field == 'public' then
       for file in paths.gwalk(value) do
          local route = file
-
          if string.sub(file, 1, 1) == '.' then
             route = string.sub(file, 2)
          end
-
          app.get(route, function(req, res)
             res.sendFile(file)
          end)
@@ -74,7 +70,6 @@ app.listen = function(options)
    local options = options or {}
    local host = options.host or '127.0.0.1'
    local port = options.port or '8080'
-
    async.http.listen({host=host, port=port}, _handle)
    print(string.format('Listening on %s:%s', host, port))
    async.go()
@@ -106,7 +101,6 @@ end
 app.error = function(errorCode, cb)
    assert(errorCode ~= nil and async.http.codes[errorCode] ~= nil)
    assert(cb ~= nil)
-
    app.errorFuncs[errorCode] = cb
 end
 
