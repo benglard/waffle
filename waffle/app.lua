@@ -30,18 +30,24 @@ end
 local _handle = function(request, handler)
    local url = request.url.path
    local method = request.method
+   local fullURL 
+   if string.sub(url, -1) == '/' then
+      fullURL = url .. (request.url.query or '')
+   else
+      fullURL = url .. '/' .. (request.url.query or '')
+   end
    response.new()
    response.setHandler(handler)
 
-   for pattern, funcs in pairs(app.urlCache) do
-      local cache = funcs[method]
+   local ok, err = pcall(function()
+      local cache = app.urlCache[fullURL][method]
       if cache ~= nil then
-         request.params = cache.params
+         request.params = cache.match
          request.url.args = cache.args
          cache.cb(request, response)
-         return nil
       end
-   end
+   end)
+   if ok then return nil end
 
    for pattern, funcs in pairs(app.viewFuncs) do
       local match = {string.match(url, pattern)}
@@ -65,12 +71,12 @@ local _handle = function(request, handler)
             end)
             if ok then
                local cache = {
+                  match = match,
+                  args = request.url.args,
                   cb = funcs[method],
-                  params = match,
-                  args = request.url.args
                }
-               if app.urlCache[url] == nil then app.urlCache[url] = {} end
-               app.urlCache[url][method] = cache
+               if app.urlCache[fullURL] == nil then app.urlCache[fullURL] = {} end
+               app.urlCache[fullURL][method] = cache
             else
                if app.properties.debug then print(err) end
                app.abort(500, err, request, response) 
