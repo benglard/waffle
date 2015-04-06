@@ -87,3 +87,19 @@ app.get('/search', function(req, res)
    res.redirect('https://www.google.com/search?q=' .. search)
 end)
 ```
+
+## Error Handling
+```lua
+app.error(404, function(description, req, res)
+   local url = string.format('%s%s', req.headers.host, req.url.path)
+   res.status(404).send('No page found at ' .. url)
+end)
+
+app.error(500, function(description, req, res)
+   if app.properties.debug then
+      res.status(500).send(description)
+   else
+      res.status(500).send('500 Error')
+   end
+end)
+```
