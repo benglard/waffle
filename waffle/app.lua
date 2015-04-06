@@ -3,15 +3,15 @@ local response = require 'waffle.response'
 local paths = require 'waffle.paths'
 local string = require 'waffle.string'
 local utils = require 'waffle.utils'
+local Cache = require 'waffle.cache'
 
 local app = {}
-app.properties = {}
 app.viewFuncs = {}
 app.errorFuncs = {}
-app.urlCache = {}
+app.properties = Cache(10000)
+app.urlCache = Cache(20)
 
 app.set = function(field, value)
-   utils.stringassert(field)
    app.properties[field] = value
 
    if field == 'public' then
@@ -30,24 +30,22 @@ end
 local _handle = function(request, handler)
    local url = request.url.path
    local method = request.method
-   local fullURL 
+   local fullURL
    if string.sub(url, -1) == '/' then
-      fullURL = url .. (request.url.query or '')
+      fullURL = request.method .. url .. (request.url.query or '')
    else
-      fullURL = url .. '/' .. (request.url.query or '')
+      fullURL = request.method .. url .. '/' .. (request.url.query or '')
    end
    response.new()
    response.setHandler(handler)
 
-   local ok, err = pcall(function()
-      local cache = app.urlCache[fullURL][method]
-      if cache ~= nil then
-         request.params = cache.match
-         request.url.args = cache.args
-         cache.cb(request, response)
-      end
-   end)
-   if ok then return nil end
+   local cache = app.urlCache[fullURL]
+   if cache ~= nil then
+      request.params = cache.match
+      request.url.args = cache.args
+      cache.cb(request, response)
+      return nil
+   end
 
    for pattern, funcs in pairs(app.viewFuncs) do
       local match = {string.match(url, pattern)}
@@ -70,13 +68,11 @@ local _handle = function(request, handler)
                funcs[method](request, response) 
             end)
             if ok then
-               local cache = {
+               app.urlCache[fullURL] = {
                   match = match,
                   args = request.url.args,
                   cb = funcs[method],
                }
-               if app.urlCache[fullURL] == nil then app.urlCache[fullURL] = {} end
-               app.urlCache[fullURL][method] = cache
             else
                if app.properties.debug then print(err) end
                app.abort(500, err, request, response) 

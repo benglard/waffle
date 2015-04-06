@@ -13,3 +13,77 @@ end)
 
 app.listen()
 ```
+
+## Requests
+```lua
+app.get('/', function(req, res)
+    res.send('Getting...')
+end)
+
+app.post('/', function(req, res)
+   res.send('Posting...')
+end)
+
+app.put('/', function(req, res)
+   res.send('Putting...')
+end)
+
+app.delete('/', function(req, res)
+   res.send('Deleting...')
+end)
+```
+
+## Static Files
+```lua
+local app = require('../waffle')
+app.set('public', '.')
+app.listen()
+```
+
+## URL Parameters
+```lua
+app.get('/user/(%d+)', function(req, res)
+   local userId = tonumber(req.params[1])
+   local users = {
+      [1] = 'Lua',
+      [2] = 'JavaScript',
+      [3] = 'Python'
+   }
+
+   res.send(string.format('Hello, %s', users[userId] or 'undefined'))
+end)
+
+app.get('/user/(%a+)', function(req, res)
+   local name = req.params[1]
+   res.send(string.format('Hello, %s', name))
+end)
+```
+
+TODO: Named parameters
+
+## HTML Rendering
+```html
+<html>
+<head></head>
+<body>
+  <h3>Welcome, ${name}</h3>
+  <p>Time: ${time}</p>
+</body>
+</html>
+```
+```lua
+app.get('/render/(%a+)', function(req, res)
+   res.render('./examples/template.html', {
+      name = req.params[1],
+      time = os.time()
+   })
+end)
+```
+
+## Query Paramaters
+```lua
+app.get('/search', function(req, res)
+   local search = req.url.args.q
+   res.redirect('https://www.google.com/search?q=' .. search)
+end)
+```

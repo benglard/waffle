@@ -28,7 +28,7 @@ app.get('/test', function(req, res)
 end)
 
 app.get('/html', function(req, res)
-   res.sendFile('./index.html')
+   res.sendFile('./examples/index.html')
 end)
 
 app.get('/error', function(req, res)
@@ -40,7 +40,7 @@ app.get('/redir', function(req, res)
 end)
 
 app.get('/lua', function(req, res)
-   res.sendFile('./ex.lua')
+   res.sendFile('./examples/demo.lua')
 end)
 
 app.get('/user/(%d+)', function(req, res)
@@ -61,6 +61,13 @@ end)
 
 app.post('/onlypost', function(req, res)
    res.send('Only posting from here')
+end)
+
+app.get('/render/(%a+)', function(req, res)
+   res.render('./examples/template.html', {
+      name = req.params[1],
+      time = os.time()
+   })
 end)
 
 app.error(404, function(description, req, res)

@@ -44,4 +44,11 @@ response.sendFile = function(path)
    end)
 end
 
+response.render = function(path, args)
+   response.setHeader('Content-Type', 'text/html')
+   async.fs.readFile(path, function(content)
+      response.send(content % args)
+   end)
+end
+
 return response
