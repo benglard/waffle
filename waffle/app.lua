@@ -128,7 +128,7 @@ end
 app.abort = function(errorCode, description, req, res)
    if app.errorFuncs[errorCode] ~= nil then
       app.errorFuncs[errorCode](description, req, res)
-      return
+      return nil
    else
       res.setStatus(errorCode)
       res.setHeader('Content-Type', 'text/html')

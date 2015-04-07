@@ -59,8 +59,6 @@ app.get('/user/(%a+)', function(req, res)
 end)
 ```
 
-TODO: Named parameters
-
 ## HTML Rendering
 ```html
 <html>
@@ -103,3 +101,12 @@ app.error(500, function(description, req, res)
    end
 end)
 ```
+
+## TODO
+* Named URL route parameters
+* JSON
+* Enhanced HTML templating engine
+* Testing
+* Documentation
+* Websockets?
+* more?
