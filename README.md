@@ -17,7 +17,7 @@ app.listen()
 ## Requests
 ```lua
 app.get('/', function(req, res)
-    res.send('Getting...')
+   res.send('Getting...')
 end)
 
 app.post('/', function(req, res)
@@ -49,7 +49,6 @@ app.get('/user/(%d+)', function(req, res)
       [2] = 'JavaScript',
       [3] = 'Python'
    }
-
    res.send(string.format('Hello, %s', users[userId] or 'undefined'))
 end)
 
@@ -106,6 +105,7 @@ end)
 * Named URL route parameters
 * JSON
 * Enhanced HTML templating engine
+* Sessions/cookies
 * Testing
 * Documentation
 * Websockets?
