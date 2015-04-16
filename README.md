@@ -101,12 +101,47 @@ app.error(500, function(description, req, res)
 end)
 ```
 
+## JSON
+```lua
+app.get('/', function(req, res)
+   res.json({test=true})
+end)
+```
+
+## Async Debugging
+```lua
+app = require('../waffle')
+a = 1
+b = 2
+c = 3
+app.repl()
+app.listen()
+```
+
+```lua
+th> async = require 'async'
+                                                                      [0.0133s]  
+th> async.repl.connect({host='127.0.0.1', port=8081})
+                                                                      [0.0005s]  
+th> async.go()
+127.0.0.1:8081> a
+1  
+127.0.0.1:8081> b
+2  
+127.0.0.1:8081> c
+3  
+127.0.0.1:8081> app
+{ ... }
+127.0.0.1:8081> _G
+{ ... }
+```
+
 ## TODO
 * Named URL route parameters
-* JSON
 * Enhanced HTML templating engine
 * Sessions/cookies
 * Testing
 * Documentation
 * Websockets?
+* Rewrite in C for extra performance?
 * more?

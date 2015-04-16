@@ -33,7 +33,7 @@ return function(size)
    end
    setmetatable(rv, {
       __index = function(_, k) return rv.store[k] end,
-      __newindex = function(_, k, v) _push(rv, k, v) end
+      __newindex = _push
    })
    return rv
 end

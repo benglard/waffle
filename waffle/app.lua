@@ -36,8 +36,7 @@ local _handle = function(request, handler)
    else
       fullURL = request.method .. url .. '/' .. (request.url.query or '')
    end
-   response.new()
-   response.setHandler(handler)
+   response.new(handler)
 
    local cache = app.urlCache[fullURL]
    if cache ~= nil then
@@ -138,6 +137,14 @@ app.abort = function(errorCode, description, req, res)
 <body><h1>Error: %d</h1><p>%s</p></body>
 </html>]], errorCode, async.http.codes[errorCode]))
    end
+end
+
+app.repl = function(options)
+   local options = options or {}
+   local host = options.host or '127.0.0.1'
+   local port = options.port or '8081'
+   async.repl.listen({host=host, port=port})
+   print(string.format('REPL listening on %s:%s', host, port))
 end
 
 return app

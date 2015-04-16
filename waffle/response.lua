@@ -1,10 +1,10 @@
 local async = require 'async'
 local response = {}
 
-response.new = function()
+response.new = function(handler)
    response.headers = {}
    response.statusCode = 200
-   response.handler = function(body, headers, statusCode) end
+   response.handler = handler or function(body, headers, statusCode) end
    return response
 end
 
@@ -49,6 +49,11 @@ response.render = function(path, args)
    async.fs.readFile(path, function(content)
       response.send(content % args)
    end)
+end
+
+response.json = function(content)
+   response.setHeader('Content-Type', 'application/json')
+   response.send(async.json.encode(content))
 end
 
 return response
