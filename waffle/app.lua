@@ -147,4 +147,14 @@ app.repl = function(options)
    print(string.format('REPL listening on %s:%s', host, port))
 end
 
+setmetatable(app, {
+   __call = function(self, options)
+      options = options or {}
+      for k, v in pairs(options) do
+         app.set(k, v)
+      end
+      return app
+   end,
+})
+
 return app

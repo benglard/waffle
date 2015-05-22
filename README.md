@@ -5,7 +5,7 @@ Waffle's performance is impressive. On [this test](https://medium.com/@tschundee
 
 ## Hello World
 ```lua
-local app = require('../waffle')
+local app = require('waffle')
 
 app.get('/', function(req, res)
    res.send('Hello World!')
@@ -35,7 +35,7 @@ end)
 
 ## Static Files
 ```lua
-local app = require('../waffle')
+local app = require('waffle')
 app.set('public', '.')
 app.listen()
 ```
@@ -104,7 +104,7 @@ end)
 ## JSON
 ```lua
 app.get('/', function(req, res)
-   res.json({test=true})
+   res.json {test=true}
 end)
 ```
 

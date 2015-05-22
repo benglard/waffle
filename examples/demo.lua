@@ -3,12 +3,12 @@ app.set('debug', true)
 
 app.get('/', function(req, res)
    res.header('Content-Type', 'text/html')
-   res.send([[
+   res.send[[
 <html>
 <head></head>
 <body>Hello</body>
 </html>
-   ]])
+   ]]
 end)
 
 app.post('/', function(req, res)
