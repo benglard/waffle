@@ -70,13 +70,24 @@ app.get('/render/(%a+)', function(req, res)
    })
 end)
 
+app.get('/cookie', function(req, res)
+   local c = req.cookies.counter or -1
+   res.cookie('counter', tonumber(c) + 1)
+   res.send('#' .. c)
+end)
+
+app.get('/cookie/clear', function(req, res)
+   res.cookie.clear(req.cookies)
+   res.send('Deleting cookies ...')
+end)
+
 app.error(404, function(description, req, res)
    local url = string.format('%s%s', req.headers.host, req.url.path)
    res.status(404).send('No page found at ' .. url)
 end)
 
 app.error(500, function(description, req, res)
-   if app.properties.debug then
+   if app.debug then
       res.status(500).send(description)
    else
       res.status(500).send('500 Error')

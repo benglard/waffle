@@ -8,7 +8,7 @@ local Cache = require 'waffle.cache'
 local app = {}
 app.viewFuncs = {}
 app.errorFuncs = {}
-app.properties = Cache(10000)
+app.properties = Cache(100)
 app.urlCache = Cache(20)
 
 app.set = function(field, value)
@@ -24,10 +24,22 @@ app.set = function(field, value)
             res.sendFile(file)
          end)
       end
+   elseif field == 'cachesize' then
+      app.urlCache.size = value
    end
 end
 
 local _handle = function(request, handler)
+   local function getcookies()
+      request.cookies = {}
+      if request.headers.cookie then
+         for param in string.gsplit(request.headers.cookie, '; ') do
+            local arg = string.split(param, '=')
+            request.cookies[arg[1]] = arg[2]
+         end
+      end
+   end
+
    local url = request.url.path
    local method = request.method
    local fullURL
@@ -36,15 +48,22 @@ local _handle = function(request, handler)
    else
       fullURL = request.method .. url .. '/' .. (request.url.query or '')
    end
-   response.new(handler)
 
    local cache = app.urlCache[fullURL]
    if cache ~= nil then
-      request.params = cache.match
-      request.url.args = cache.args
-      cache.cb(request, response)
+      if app.autocache and cache.response.body ~= '' then
+         response.load(cache.response, response.resend, handler)
+      else
+         response.new(handler)
+         request.params = cache.match
+         request.url.args = cache.args
+         getcookies()
+         cache.cb(request, response)
+      end
       return nil
    end
+
+   response.new(handler)
 
    for pattern, funcs in pairs(app.viewFuncs) do
       local match = {string.match(url, pattern)}
@@ -61,22 +80,26 @@ local _handle = function(request, handler)
                request.url.args[arg[1]] = arg[2]
             end
          end
+         getcookies()
 
          if funcs[method] then
-            local ok, err = pcall(function() 
-               funcs[method](request, response) 
-            end)
+            local ok, err = pcall(funcs[method], request, response)
             if ok then
-               app.urlCache[fullURL] = {
+               local data = {
                   match = match,
                   args = request.url.args,
-                  cb = funcs[method],
+                  cb = funcs[method]
                }
+               if app.autocache then
+                  data.response = response.save()
+               end
+               app.urlCache[fullURL] = data
             else
-               if app.properties.debug then print(err) end
-               app.abort(500, err, request, response) 
+               if app.debug then print(err) end
+               app.abort(500, err, request, response)
             end
-         else app.abort(403, 'Forbidden', request, response)
+         else
+            app.abort(403, 'Forbidden', request, response)
          end
 
          return nil
@@ -155,6 +178,9 @@ setmetatable(app, {
       end
       return app
    end,
+   __index = function(self, idx)
+      return app.properties[idx]
+   end
 })
 
 return app

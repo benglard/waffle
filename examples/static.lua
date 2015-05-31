@@ -1,6 +1,6 @@
 local app = require('../waffle') {
-   public = '.'
+   public = './waffle',
+   debug = true
 }
---app.set('public', '.')
 print(app.viewFuncs)
 app.listen()

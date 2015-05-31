@@ -1,6 +1,9 @@
 -- https://medium.com/@tschundeee/express-vs-flask-vs-go-acc0879c2122
 
-local app = require('../waffle')
+local app = require('../waffle') {
+   debug = true,
+   autocache = true
+}
 
 fib = function(n)
    if n == 0 then return 0
@@ -10,10 +13,10 @@ fib = function(n)
 end
 
 app.get('/(%d+)', function(req, res)
-   local number = tonumber(req.params[1])
-   local result = tostring(fib(number))
+   local n = req.params[1]
+   local result = fib(tonumber(n))
    res.header('Content-Type', 'text/html')
-   res.send('ASyNC + Waffle<hr> fib(' .. tostring(number) .. '): ' .. result)
+   res.send('ASyNC + Waffle<hr> fib(' .. n .. '): ' .. result)
 end)
 
 app.listen()

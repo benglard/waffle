@@ -26,7 +26,6 @@ build = {
       ['waffle.paths'] = 'waffle/paths.lua',
       ['waffle.response'] = 'waffle/response.lua',
       ['waffle.string'] = 'waffle/string.lua',
-      ['waffle.table'] = 'waffle/table.lua',
       ['waffle.utils'] = 'waffle/utils.lua'
    }
 }
