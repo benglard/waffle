@@ -1,5 +1,9 @@
 local async = require 'async'
-local response = {}
+local paths = require 'waffle.paths'
+local utils = require 'waffle.utils'
+local response = {
+   templates = ''
+}
 
 response.new = function(handler)
    response.body = ''
@@ -66,9 +70,11 @@ response.sendFile = function(path)
    end)
 end
 
-response.render = function(path, args)
+response.render = function(path, args, folder)
+   local templates = response.templates or folder or ''
+   local fname = paths.add(templates, path)
    response.setHeader('Content-Type', 'text/html')
-   async.fs.readFile(path, function(content)
+   async.fs.readFile(fname, function(content)
       response.send(content % args)
    end)
 end

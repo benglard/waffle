@@ -1,17 +1,19 @@
 local paths = require 'paths'
 local utils = require 'waffle.utils'
 
-paths.delim = function()
+paths.delim = (function()
    if paths.is_win() then return '\\'
    else return '/' end
-end
+end)()
 
 paths.add = function(p1, p2)
-   local delim = paths.delim()
-   if string.sub(p1, -1) == delim then
+   if #p1 == 0 then
+      return p2
+   end
+   if string.sub(p1, -1) == paths.delim then
       return p1 .. p2
    else
-      return p1 .. delim .. p2
+      return p1 .. paths.delim .. p2
    end
 end
 

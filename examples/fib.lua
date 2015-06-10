@@ -2,7 +2,7 @@
 
 local app = require('../waffle') {
    debug = true,
-   autocache = true
+   autocache = true,
 }
 
 fib = function(n)

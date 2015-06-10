@@ -1,0 +1,20 @@
+#!/usr/bin/env luajit
+require 'torch'
+local cmd = torch.CmdLine()
+cmd:option('--create', '', 'project name')
+local opt = cmd:parse(arg or {})
+local project = opt.create
+
+if #project > 0 then
+   os.execute('mkdir ' .. project)
+   os.execute('mkdir ' .. project .. '/public')
+   os.execute('mkdir ' .. project .. '/public/js')
+   os.execute('mkdir ' .. project .. '/public/css')
+   os.execute('mkdir ' .. project .. '/public/imgs')
+   os.execute('mkdir ' .. project .. '/templates')
+   os.execute('mkdir ' .. project .. '/api')
+   os.execute('mkdir ' .. project .. '/lib')
+   os.execute('mkdir ' .. project .. '/bin')
+   local s = [[local app = require 'waffle']]
+   os.execute('echo "' .. s .. '" > ' .. project .. '/init.lua')
+end

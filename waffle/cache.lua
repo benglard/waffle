@@ -24,22 +24,33 @@ local _pop = function(cache, index)
    return victim
 end
 
+local _del = function(cache, key)
+   for idx, name in pairs(cache.keys) do
+      if name == key then
+         cache:pop(idx)
+         return true
+      end
+   end
+   return false
+end
+
 local mt = {
    __index = _get,
    __newindex = _push
 }
 
 return function(size)
-   local rv = {}
-   rv.size  = size or 10
-   rv.store = {}
-   rv.keys  = {}
-   rv.get   = _get
-   rv.push  = _push
-   rv.pop   = _pop
-   rv.full  = function() return #rv.keys == rv.size end
-   rv.empty = function() return #rv.keys == 0 end
-   rv.clean = function()
+   local rv  = {}
+   rv.size   = size or 10
+   rv.store  = {}
+   rv.keys   = {}
+   rv.get    = _get
+   rv.push   = _push
+   rv.pop    = _pop
+   rv.delete = _del
+   rv.full   = function() return #rv.keys == rv.size end
+   rv.empty  = function() return #rv.keys == 0 end
+   rv.clean  = function()
       rv.store = {}
       rv.keys = {}
    end

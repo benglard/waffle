@@ -1,5 +1,5 @@
 # Waffle
-Waffle is a tiny, fast, asynchronous, express-inspired web framework for Lua/Torch built on top of [ASyNC](https://github.com/clementfarabet/async).
+Waffle is a fast, asynchronous, express-inspired web framework for Lua/Torch built on top of [ASyNC](https://github.com/clementfarabet/async).
 
 Waffle's performance is impressive. On [this test](https://medium.com/@tschundeee/express-vs-flask-vs-go-acc0879c2122), given in ```examples/fib.lua```, Waffle reaches over 20,000 requests/sec (2-4 x Node+express, 1/2 x multithreaded Go). With automatic caching enabled, Waffle can reach over 26,000 requests/sec, equaling single-threaded Go.
 
@@ -117,6 +117,39 @@ app.get('/cookie', function(req, res)
 end)
 ```
 
+## Sessions
+
+```lua
+local app = require('waffle').CmdLine()
+
+app.get('/', function(req, res)
+   app.session:get('n', function(n)
+      if n == nil then n = 0 end
+      n = tonumber(n)
+      res.send('#' .. n)
+      if n > 19 then
+         app.session:delete('n')
+      else
+         app.session.n = n + 1
+      end
+   end)
+end)
+
+app.listen()
+```
+
+## Command Line Options
+
+Allows you to write every currently possible waffle application property as a command line option, and have it handled seamlessly. 
+
+```lua
+local app = require('../waffle').CmdLine()
+```
+
+```
+> th examples/cmdline.lua --debug --print --port 3000 --templates examples/
+```
+
 ## Async Debugging
 ```lua
 app = require('waffle')
@@ -174,9 +207,8 @@ app.listen()
 
 ## TODO
 * Named URL route parameters
-* Automatic caching of static files (harder because async.fs.readFile acts asynchronously but not as important because browsers typically cache these as well)
+* Automatic caching of static files
 * Enhanced HTML templating engine
-* Sessions
 * Testing
 * Documentation
 * Websockets?

@@ -4,12 +4,14 @@ local paths = require 'waffle.paths'
 local string = require 'waffle.string'
 local utils = require 'waffle.utils'
 local Cache = require 'waffle.cache'
+local Session = require 'waffle.session'
 
 local app = {}
 app.viewFuncs = {}
 app.errorFuncs = {}
 app.properties = Cache(100)
 app.urlCache = Cache(20)
+app.session = Session
 
 app.set = function(field, value)
    app.properties[field] = value
@@ -24,6 +26,8 @@ app.set = function(field, value)
             res.sendFile(file)
          end)
       end
+   elseif field == 'templates' then
+      response.templates = value
    elseif field == 'cachesize' then
       app.urlCache.size = value
    end
@@ -42,11 +46,14 @@ local _handle = function(request, handler)
 
    local url = request.url.path
    local method = request.method
-   local fullURL
-   if string.sub(url, -1) == '/' then
-      fullURL = request.method .. url .. (request.url.query or '')
-   else
-      fullURL = request.method .. url .. '/' .. (request.url.query or '')
+   local delim = ''
+   if string.sub(url, -1) ~= '/' then delim = '/' end
+   local query = request.url.query or ''
+   local fullURL = string.format('%s%s%s%s',
+      request.method, url, delim, query)
+
+   if app.print then
+      print('Request from ' .. fullURL)
    end
 
    local cache = app.urlCache[fullURL]
@@ -95,7 +102,9 @@ local _handle = function(request, handler)
                end
                app.urlCache[fullURL] = data
             else
-               if app.debug then print(err) end
+               if app.debug then
+                  print('ERROR: ' .. err)
+               end
                app.abort(500, err, request, response)
             end
          else
@@ -111,8 +120,8 @@ end
 
 app.listen = function(options)
    local options = options or {}
-   local host = options.host or '127.0.0.1'
-   local port = options.port or '8080'
+   local host = options.host or app.host or '127.0.0.1'
+   local port = options.port or app.port or '8080'
    async.http.listen({host=host, port=port}, _handle)
    print(string.format('Listening on %s:%s', host, port))
    async.go()
@@ -164,10 +173,38 @@ end
 
 app.repl = function(options)
    local options = options or {}
-   local host = options.host or '127.0.0.1'
-   local port = options.port or '8081'
+   local host = options.host or app.replhost or '127.0.0.1'
+   local port = options.port or app.replport or '8081'
    async.repl.listen({host=host, port=port})
    print(string.format('REPL listening on %s:%s', host, port))
+end
+
+app.CmdLine = function()
+   local cmd = torch.CmdLine()
+   cmd:text()
+   cmd:text('Waffle Command Line')
+   cmd:text()
+   cmd:text('Options:')
+   cmd:option('--host', '127.0.0.1', 'Host IP on which to recieve requests')
+   cmd:option('--port', '8080', 'Host Port on which to recieve requests')
+   cmd:option('--debug', false, 'Set application to debugging mode')
+   cmd:option('--public', './public', 'Set application public folder')
+   cmd:option('--templates', './templates', 'Set application public folder')
+   cmd:option('--replhost', '127.0.0.1', 'Host IP on which to recieve REPL requests')
+   cmd:option('--replport', '8081', 'Host Port on which to recieve REPL requests')
+   cmd:option('--print', false, 'Print the method and url of requests')
+   cmd:option('--session', 'cache', 'Type of session: cache | redis')
+   cmd:option('--sessionsize', 1000, 'Size of session (only valid for cached sessions)')
+   cmd:option('--redishost', '127.0.0.1', 'Redis host (only valid for redis sessions)')
+   cmd:option('--redisport', '6379', 'Redis port (only valid for redis sessions)')
+   cmd:option('--redisprefix', 'waffle-', 'Redis key prefix (only valid for redis sessions)')
+   cmd:text()
+   local opt = cmd:parse(arg or {})
+   for name, value in pairs(opt) do
+      app.set(name, value)
+   end
+   app.session(opt.session, opt)
+   return app
 end
 
 setmetatable(app, {
