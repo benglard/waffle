@@ -104,7 +104,7 @@ end)
 ## JSON
 ```lua
 app.get('/', function(req, res)
-   res.json {test=true}
+   res.json{test=true}
 end)
 ```
 
@@ -118,6 +118,8 @@ end)
 ```
 
 ## Sessions
+
+Waffle has both in-memory and redis sessions using [redis-async](https://github.com/ocallaco/redis-async).
 
 ```lua
 local app = require('waffle')

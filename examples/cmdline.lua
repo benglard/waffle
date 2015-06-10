@@ -1,7 +1,7 @@
 --[[ 
 Try running like
 
-> th examples/cmdline.lua --debug --print --port 3000 --templates examples/
+> th examples/cmdline.lua --debug --print --port 3000 --templates examples/ --autocache
 
 And then visiting http://127.0.0.1:3000/... in your web browser
 ]]

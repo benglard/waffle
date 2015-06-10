@@ -187,23 +187,25 @@ app.CmdLine = function()
    cmd:text('Options:')
    cmd:option('--host', '127.0.0.1', 'Host IP on which to recieve requests')
    cmd:option('--port', '8080', 'Host Port on which to recieve requests')
-   cmd:option('--debug', false, 'Set application to debugging mode')
+   cmd:option('--debug', false, 'Set application to debugging mode if true')
    cmd:option('--public', './public', 'Set application public folder')
    cmd:option('--templates', './templates', 'Set application public folder')
    cmd:option('--replhost', '127.0.0.1', 'Host IP on which to recieve REPL requests')
    cmd:option('--replport', '8081', 'Host Port on which to recieve REPL requests')
-   cmd:option('--print', false, 'Print the method and url of requests')
+   cmd:option('--print', false, 'Print the method and url of every request if true')
    cmd:option('--session', 'cache', 'Type of session: cache | redis')
    cmd:option('--sessionsize', 1000, 'Size of session (only valid for cached sessions)')
    cmd:option('--redishost', '127.0.0.1', 'Redis host (only valid for redis sessions)')
    cmd:option('--redisport', '6379', 'Redis port (only valid for redis sessions)')
    cmd:option('--redisprefix', 'waffle-', 'Redis key prefix (only valid for redis sessions)')
    cmd:option('--cachesize', 20, 'Size of URL cache')
+   cmd:option('--autocache', false, 'Automatically cache response body, headers, and status code if true')
    cmd:text()
    local opt = cmd:parse(arg or {})
-   for name, value in pairs(opt) do
-      app.set(name, value)
-   end
+   --for name, value in pairs(opt) do
+   --   app.set(name, value)
+   --end
+   app(opt)
    app.session(opt.session, opt)
    return app
 end
