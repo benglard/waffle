@@ -1,4 +1,4 @@
-local app = require('../waffle').CmdLine()
+local app = require('../waffle') --.CmdLine()
 local async = require 'async'
 
 -- Test
@@ -16,6 +16,8 @@ async.setTimeout(100, function()
       print(data)
    end)
 end)]]
+
+app.session('redis')
 
 app.get('/', function(req, res)
    app.session:get('n', function(n)

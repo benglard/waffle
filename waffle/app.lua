@@ -198,6 +198,7 @@ app.CmdLine = function()
    cmd:option('--redishost', '127.0.0.1', 'Redis host (only valid for redis sessions)')
    cmd:option('--redisport', '6379', 'Redis port (only valid for redis sessions)')
    cmd:option('--redisprefix', 'waffle-', 'Redis key prefix (only valid for redis sessions)')
+   cmd:option('--cachesize', 20, 'Size of URL cache')
    cmd:text()
    local opt = cmd:parse(arg or {})
    for name, value in pairs(opt) do

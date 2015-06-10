@@ -10,20 +10,20 @@ session.new = function(self, stype, args)
    args = args or {}
    if stype == 'cache' then
       local size = args.size or 1000
-      session.data = Cache(size)
+      self.data = Cache(size)
    elseif stype == 'redis' then
       assert(redisOk, 'redis-async is not installed')
-      session.prefix = args.prefix or 'waffle-'
+      self.prefix = args.prefix or 'waffle-'
       local host = args.redishost or args.host or '127.0.0.1'
       local port = args.redisport or args.port or '6379'
       redis.connect({host=host, port=port}, function(client)
-         session.data = client
+         self.data = client
       end)
       print(string.format('Redis client listening on %s:%s', host, port))
    else
       error('unsupported session type')
    end
-   session.type = stype
+   self.type = stype
 end
 
 session.get = function(self, name, cb)

@@ -144,7 +144,7 @@ app.listen()
 Allows you to write every currently possible waffle application property as a command line option, and have it handled seamlessly. 
 
 ```lua
-local app = require('../waffle').CmdLine()
+local app = require('waffle').CmdLine()
 ```
 
 ```
