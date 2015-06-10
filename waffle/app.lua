@@ -202,9 +202,6 @@ app.CmdLine = function()
    cmd:option('--autocache', false, 'Automatically cache response body, headers, and status code if true')
    cmd:text()
    local opt = cmd:parse(arg or {})
-   --for name, value in pairs(opt) do
-   --   app.set(name, value)
-   --end
    app(opt)
    app.session(opt.session, opt)
    return app
