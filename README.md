@@ -120,7 +120,8 @@ end)
 ## Sessions
 
 ```lua
-local app = require('waffle').CmdLine()
+local app = require('waffle')
+app.session('redis')
 
 app.get('/', function(req, res)
    app.session:get('n', function(n)

@@ -14,7 +14,7 @@ description = {
 dependencies = {
    'torch >= 7.0',
    'paths >= 1.0',
-   'buffer'
+   'buffer',
    'async'
 }
 
