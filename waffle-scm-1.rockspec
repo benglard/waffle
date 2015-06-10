@@ -15,7 +15,8 @@ dependencies = {
    'torch >= 7.0',
    'paths >= 1.0',
    'buffer',
-   'async'
+   'async',
+   'redis-async'
 }
 
 build = {

@@ -1,18 +1,17 @@
 local Cache = require 'waffle.cache'
-local redisOk, redis = pcall(require, 'redis-async')
+local redis = require 'redis-async'
 
 local session = {}
 session.type = ''
 
 session.new = function(self, stype, args)
-   assert(session.data == nil, 'Only one session allowed per application')
+   assert(self.data == nil, 'Only one session allowed per application')
    stype = stype or 'cache'
    args = args or {}
    if stype == 'cache' then
       local size = args.size or 1000
       self.data = Cache(size)
    elseif stype == 'redis' then
-      assert(redisOk, 'redis-async is not installed')
       self.prefix = args.prefix or 'waffle-'
       local host = args.redishost or args.host or '127.0.0.1'
       local port = args.redisport or args.port or '6379'
