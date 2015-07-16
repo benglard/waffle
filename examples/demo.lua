@@ -50,7 +50,6 @@ app.get('/user/(%d+)', function(req, res)
       [2] = 'JavaScript',
       [3] = 'Python'
    }
-
    res.send(string.format('Hello, %s', users[userId] or 'undefined'))
 end)
 

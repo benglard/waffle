@@ -202,9 +202,8 @@ app.CmdLine = function()
    cmd:option('--autocache', false, 'Automatically cache response body, headers, and status code if true')
    cmd:text()
    local opt = cmd:parse(arg or {})
-   app(opt)
    app.session(opt.session, opt)
-   return app
+   return app(opt)
 end
 
 setmetatable(app, {

@@ -1,0 +1,8 @@
+local base = extends 'examples/baseluatemp.html'
+return block(base, 'content'){
+   html.h3 'Welcome, ${name}',
+   html.p 'Time: ${time}',
+   html.img {
+      src = 'https://www.google.com/images/srpr/logo11w.png'
+   }
+}

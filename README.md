@@ -3,6 +3,15 @@ Waffle is a fast, asynchronous, express-inspired web framework for Lua/Torch bui
 
 Waffle's performance is impressive. On [this test](https://medium.com/@tschundeee/express-vs-flask-vs-go-acc0879c2122), given in ```examples/fib.lua```, Waffle reaches over 20,000 requests/sec (2-4 x Node+express, 1/2 x multithreaded Go). With automatic caching enabled, Waffle can reach over 26,000 requests/sec, equaling single-threaded Go.
 
+This project depends on [htmlua](https://github.com/benglard/htmlua) for HTML templating.
+
+## Installation
+
+```
+> (sudo) luarocks install https://raw.githubusercontent.com/benglard/htmlua/master/htmlua-scm-1.rockspec
+> (sudo) luarocks install https://raw.githubusercontent.com/benglard/waffle/master/waffle-scm-1.rockspec
+```
+
 ## Hello World
 ```lua
 local app = require('waffle')
@@ -59,6 +68,9 @@ end)
 ```
 
 ## HTML Rendering
+
+There are two options for html rendering. The first involves writing actual html and using the string interp utility provided, ${variable-name}.
+
 ```html
 <html>
 <head></head>
@@ -76,6 +88,45 @@ app.get('/render/(%a+)', function(req, res)
    })
 end)
 ```
+
+The second, preferable, more powerful way involves writing htmlua scripts, either as separate template files, or inline in view functions.
+
+
+```html
+-- luatemp.html
+local base = extends 'examples/baseluatemp.html'
+return block(base, 'content'){
+   html.h3 'Welcome, ${name}',
+   html.p 'Time: ${time}',
+   html.img {
+      src = 'https://www.google.com/images/srpr/logo11w.png'
+   }
+}
+```
+
+```lua
+-- htmlua.lua
+-- Template
+app.get('/', function(req, res)
+   res.htmlua('luatemp.html', { name = 'waffle', time = os.time() })
+end)
+
+-- Inline
+app.get('/i', function(req, res)
+   res.send(
+      html.html {
+         html.head {
+            html.title 'Title'
+         },
+         html.body {
+            html.p 'Hello World!'
+         }
+      }
+   )
+end)
+```
+
+The htmlua page provides further documentation and examples.
 
 ## Query Paramaters
 ```lua
@@ -211,7 +262,7 @@ app.listen()
 ## TODO
 * Named URL route parameters
 * Automatic caching of static files
-* Enhanced HTML templating engine
+* Form parsing
 * Testing
 * Documentation
 * Websockets?
