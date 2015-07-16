@@ -92,7 +92,7 @@ end)
 The second, preferable, more powerful way involves writing htmlua scripts, either as separate template files, or inline in view functions.
 
 
-```html
+```lua
 -- luatemp.html
 local base = extends 'examples/baseluatemp.html'
 return block(base, 'content'){
