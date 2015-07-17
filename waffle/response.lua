@@ -1,7 +1,6 @@
 local async = require 'async'
 local paths = require 'waffle.paths'
 local utils = require 'waffle.utils'
-local Cache = require 'waffle.cache'
 local response = {}
 response.templates = ''
 
