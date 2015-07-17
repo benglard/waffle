@@ -18,7 +18,6 @@ app.get('/render', function(req, res)
    if r < 0.333 then name = 'Lua'
    elseif r < 0.666 then name = 'Python'
    else name = 'JavaScript' end
-
    res.render('template.html', { name = name, time = os.time() })
 end)
 

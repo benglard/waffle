@@ -96,9 +96,10 @@ The second, preferable, more powerful way involves writing htmlua scripts, eithe
 -- luatemp.html
 local base = extends 'examples/baseluatemp.html'
 return block(base, 'content'){
-   html.h3 'Welcome, ${name}',
-   html.p 'Time: ${time}',
-   html.img {
+   h3 'Welcome, ${name}',
+   p 'Time: ${time}',
+   ul(each([[${users}]], li)),
+   img {
       src = 'https://www.google.com/images/srpr/logo11w.png'
    }
 }
@@ -108,18 +109,22 @@ return block(base, 'content'){
 -- htmlua.lua
 -- Template
 app.get('/', function(req, res)
-   res.htmlua('luatemp.html', { name = 'waffle', time = os.time() })
+   res.htmlua('luatemp.html', {
+      name = 'waffle',
+      time = os.time(),
+      users = {'lua', 'python', 'javascript'}
+   })
 end)
 
 -- Inline
 app.get('/i', function(req, res)
    res.send(
-      html.html {
-         html.head {
-            html.title 'Title'
+      html {
+         head {
+            title 'Title'
          },
-         html.body {
-            html.p 'Hello World!'
+         body {
+            p 'Hello World!'
          }
       }
    )

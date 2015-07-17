@@ -1,20 +1,32 @@
-local app = require('../waffle') { 
+local app = require('../waffle') {
+   debug = true,
    templates = 'examples',
    autocache = true
 }
 
 app.get('/', function(req, res)
-   res.htmlua('luatemp.html', { name = 'waffle', time = os.time() })
+   res.htmlua('luatemp.lua', {
+      name = 'waffle',
+      time = os.time(),
+      users = {'lua', 'python', 'javascript'}
+   })
 end)
 
 app.get('/i', function(req, res)
+   local a = 5
+   print(a)
    res.send(
-      html.html {
-         html.head {
-            html.title 'Title'
+      html {
+         head {
+            title 'Title'
          },
-         html.body {
-            html.p 'Hello World!'
+         body {
+            p 'Hello World!',
+            _G.a { -- use _G.a because a redefined above
+               href = 'https://github.com/',
+               target = '_blank',
+               'Testing "a" tag'
+            }
          }
       }
    )

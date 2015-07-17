@@ -9,6 +9,21 @@ if not ok then
    print(msg)
    os.exit()
 else
-   _G.html = html
-end 
+   for key, val in pairs(html) do
+      if key ~= 'table' and key ~= 'select' then
+         _G[key] = val
+      end
+   end
+
+   function element(tag)
+      if tag == 'table' or tag == 'select' then
+         return function(inner)
+            return maketag(tag, inner)
+         end
+      else
+         error('element requires input of table or select')
+      end
+   end
+end
+
 return require('waffle.app')

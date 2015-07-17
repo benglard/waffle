@@ -1,6 +1,7 @@
 local async = require 'async'
 local paths = require 'waffle.paths'
 local utils = require 'waffle.utils'
+local Cache = require 'waffle.cache'
 local response = {}
 response.templates = ''
 
@@ -84,8 +85,23 @@ response.htmlua = function(path, args, folder)
    local templates = response.templates or folder or ''
    local fname = paths.add(templates, path)
    response.setHeader('Content-Type', 'text/html')
-   local rv = dofile(fname)
-   response.send(rv % args)
+
+   local hastable = false
+   for key, val in pairs(args) do
+      if type(val) == 'table' then
+         args[key] = torch.serialize(val)
+         hastable = true
+      end
+   end
+
+   if hastable then
+      async.fs.readFile(fname, function(content)
+         response.send(loadstring(content % args)())
+      end)
+   else
+      local rv = dofile(fname)
+      response.send(rv % args)
+   end
 end
 
 response.json = function(content)
