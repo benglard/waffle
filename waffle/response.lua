@@ -84,23 +84,7 @@ response.htmlua = function(path, args, folder)
    local templates = response.templates or folder or ''
    local fname = paths.add(templates, path)
    response.setHeader('Content-Type', 'text/html')
-
-   local hastable = false
-   for key, val in pairs(args) do
-      if type(val) == 'table' then
-         args[key] = torch.serialize(val)
-         hastable = true
-      end
-   end
-
-   if hastable then
-      async.fs.readFile(fname, function(content)
-         response.send(loadstring(content % args)())
-      end)
-   else
-      local rv = dofile(fname)
-      response.send(rv % args)
-   end
+   render(fname, args, response.send)
 end
 
 response.json = function(content)
