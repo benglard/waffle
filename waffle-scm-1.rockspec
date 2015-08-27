@@ -20,20 +20,8 @@ dependencies = {
 }
 
 build = {
-   type = 'builtin',
-   modules = {
-      ['waffle.init'] = 'waffle/init.lua',
-      ['waffle.app'] = 'waffle/app.lua',
-      ['waffle.cache'] = 'waffle/cache.lua',
-      ['waffle.paths'] = 'waffle/paths.lua',
-      ['waffle.response'] = 'waffle/response.lua',
-      ['waffle.session'] = 'waffle/session.lua',
-      ['waffle.string'] = 'waffle/string.lua',
-      ['waffle.utils'] = 'waffle/utils.lua'
-   },
-   install = {
-      bin = {
-         'wafflemaker'
-      }
-   }
+   type = 'command',
+   build_command = '$(MAKE) LUA_BINDIR=$(LUA_BINDIR)  LUA_LIBDIR=$(LUA_LIBDIR)  LUA_INCDIR=$(LUA_INCDIR)',
+   install_command = 'cp -r waffle $(LUADIR)',
+   install = { bin = { 'wafflemaker' } }
 }

@@ -1,11 +1,35 @@
 #!/usr/bin/env luajit
 require 'torch'
 local cmd = torch.CmdLine()
+cmd:text()
+cmd:text('wafflemaker Command Line')
+cmd:text()
+cmd:text('Options:')
 cmd:option('--create', '', 'project name')
+cmd:option('--serve', false, 'run a simple http server')
+cmd:option('--port', 8080, 'Host Port on which to recieve requests')
+cmd:text()
 local opt = cmd:parse(arg or {})
 local project = opt.create
 
-if #project > 0 then
+if opt.serve then
+   local cwd = paths.cwd()
+   local cwdl = #cwd
+   local app = require('waffle')
+   local nroutes = 0
+   for file in paths.gwalk(cwd) do
+      local route = file:sub(cwdl + 1)
+      print(route)
+      app.get(route, function(req, res) res.sendFile(file) end)
+      nroutes = nroutes + 1
+   end
+   app{
+      debug = true,
+      cachesize = nroutes
+   }.listen{
+      port = tostring(opt.port)
+   }
+elseif #project > 0 then
    os.execute('mkdir ' .. project)
    os.execute('mkdir ' .. project .. '/public')
    os.execute('mkdir ' .. project .. '/public/js')

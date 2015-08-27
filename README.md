@@ -42,13 +42,6 @@ app.delete('/', function(req, res)
 end)
 ```
 
-## Static Files
-```lua
-local app = require('waffle')
-app.set('public', '.')
-app.listen()
-```
-
 ## URL Parameters
 ```lua
 app.get('/user/(%d+)', function(req, res)
@@ -118,20 +111,108 @@ end)
 
 -- Inline
 app.get('/i', function(req, res)
-   res.send(
-      html {
-         head {
-            title 'Title'
-         },
-         body {
-            p 'Hello World!'
-         }
-      }
-   )
+   res.send(html {
+      head { title 'Title' },
+      body { p 'Hello World!' }
+   })
 end)
 ```
 
 The htmlua page provides further documentation and examples.
+
+## Form Parsing
+
+```lua
+app.get('/m', function(req, res)
+   res.send(html { body { form {
+      action = '/m',
+      method = 'POST',
+      enctype = 'multipart/form-data',
+      p { input {
+         type = 'text',
+         name = 'firstname',
+         placeholder = 'First Name'
+      }},
+      p { input {
+         type = 'text',
+         name = 'lastname',
+         placeholder = 'Last Name'
+      }},
+      p { input {
+         type = 'file',
+         name = 'file' 
+      }},
+      p { input {
+         type = 'submit',
+         'Upload'
+      }}
+   }}})
+end)
+
+app.post('/m', function(req, res)
+   local name = string.format('%s %s', req.form.firstname, req.form.lastname)
+   local path = paths.add(os.getenv('HOME'), req.form.file.filename)
+   req.form.file:save{path=path}
+   res.send('Saved to ' .. path)
+end)
+```
+
+## Websockets
+
+To implement a websocket server, call app.ws with a url path and a function accepting a single table. You can then define checkorigin, onopen, onmessage, onpong, and onclose for that table, to control the server-side websocket connection.
+
+Benchmarking websockets is tricky, but on first attempts, waffle seems competitive with similar node libraries.
+
+```lua
+local app = require('waffle')
+local js = [[
+var ws = new WebSocket("ws://127.0.0.1:8080/ws/");
+function print() { console.log(ws.readyState); }
+ws.onopen = function() {
+   console.log("opened");
+   print();
+   ws.send("Hello");
+}
+
+ws.onmessage = function(msg) {
+   console.log(msg);
+   setTimeout(function() { ws.close(); }, 1000);
+}
+
+ws.onclose = function(event) {
+   console.log(event);
+   console.log("closed");
+   print();
+}
+]]
+
+app.get('/', function(req, res)
+   res.send(html { body {
+      p 'Hello, World',
+      script { type='text/javascript', js }
+   }})
+end)
+
+app.ws('/ws', function(ws)
+   ws.checkorigin = function(origin) return origin == 'http://127.0.0.1:8080'
+   end
+
+   ws.onopen = function(req) print('/ws/opened')
+   end
+
+   ws.onmessage = function(data)
+      print(data)
+      ws:write('World')
+      ws:ping('test')
+   end
+
+   ws.onpong = function(data) print(data)
+   end
+
+   ws.onclose = function(req) print('/ws/closed')
+   end
+end)
+```
 
 ## Query Paramaters
 ```lua
@@ -139,6 +220,13 @@ app.get('/search', function(req, res)
    local search = req.url.args.q
    res.redirect('https://www.google.com/search?q=' .. search)
 end)
+```
+
+## Static Files
+```lua
+local app = require('waffle')
+app.set('public', '.')
+app.listen()
 ```
 
 ## Error Handling
@@ -154,13 +242,6 @@ app.error(500, function(description, req, res)
    else
       res.status(500).send('500 Error')
    end
-end)
-```
-
-## JSON
-```lua
-app.get('/', function(req, res)
-   res.json{test=true}
 end)
 ```
 
@@ -195,6 +276,13 @@ app.get('/', function(req, res)
 end)
 
 app.listen()
+```
+
+## JSON
+```lua
+app.get('/', function(req, res)
+   res.json{test=true}
+end)
 ```
 
 ## Command Line Options
@@ -237,6 +325,23 @@ th> async.go()
 { ... }
 ```
 
+## wafflemaker (executable)
+
+The wafflemaker executable can be used:
+
+1. to create project directories in MVC style, like so:
+
+```
+wafflemaker --create name_of_project
+```
+
+2. to serve static files akin to running ```python -m SimpleHTTPServer```, but with much, much, much better performance (almost 20x requests/sec).
+
+```
+cd folder/i/want/to/serve
+wafflemaker --serve
+```
+
 ## Larger example (with autocache)
 
 When autocache is set to true, waffle will automatically store the response body, headers, and status code, and reuse them when a request is sent to the same http method/url. So, for instance, when a request is sent to GET/10 in the example below, it will only have to compute fib(10) once. Note that ```app.urlCache``` is set by default to cache the data of the last 20 method/url requests.
@@ -267,8 +372,6 @@ app.listen()
 ## TODO
 * Named URL route parameters
 * Automatic caching of static files
-* Form parsing
 * Testing
 * Documentation
-* Websockets?
 * more?

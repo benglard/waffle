@@ -1,4 +1,6 @@
 -- package
+require 'xlua'
+
 local ok, html = pcall(require, 'htmlua')
 local msg = [[
 Please first install htmlua to handle html templating.

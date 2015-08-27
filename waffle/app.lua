@@ -1,17 +1,20 @@
 local async = require 'async'
-local response = require 'waffle.response'
-local paths = require 'waffle.paths'
-local string = require 'waffle.string'
 local utils = require 'waffle.utils'
-local Cache = require 'waffle.cache'
-local Session = require 'waffle.session'
+local paths = require 'waffle.paths'
+string.gsplit = utils.iterator(string.split)
+
+local response  = require 'waffle.response'
+local wrequest  = require 'waffle.request'
+local Cache     = require 'waffle.cache'
+local Session   = require 'waffle.session'
+local WebSocket = require 'waffle.websocket'
 
 local app = {}
-app.viewFuncs = {}
+app.viewFuncs  = {}
 app.errorFuncs = {}
 app.properties = Cache(100)
-app.urlCache = Cache(20)
-app.session = Session
+app.urlCache   = Cache(20)
+app.session    = Session
 
 app.set = function(field, value)
    app.properties[field] = value
@@ -34,16 +37,6 @@ app.set = function(field, value)
 end
 
 local _handle = function(request, handler)
-   local function getcookies()
-      request.cookies = {}
-      if request.headers.cookie then
-         for param in string.gsplit(request.headers.cookie, '; ') do
-            local arg = string.split(param, '=')
-            request.cookies[arg[1]] = arg[2]
-         end
-      end
-   end
-
    local url = request.url.path
    local method = request.method
    local delim = ''
@@ -51,6 +44,7 @@ local _handle = function(request, handler)
    local query = request.url.query or ''
    local fullURL = string.format('%s%s%s%s',
       request.method, url, delim, query)
+   request.fullurl = fullURL
 
    if app.print then
       print('Request from ' .. fullURL)
@@ -64,7 +58,7 @@ local _handle = function(request, handler)
          response.new(handler)
          request.params = cache.match
          request.url.args = cache.args
-         getcookies()
+         wrequest(request)
          cache.cb(request, response)
       end
       return nil
@@ -87,7 +81,7 @@ local _handle = function(request, handler)
                request.url.args[arg[1]] = arg[2]
             end
          end
-         getcookies()
+         wrequest(request)
 
          if funcs[method] then
             local ok, err = pcall(funcs[method], request, response)
@@ -150,6 +144,33 @@ end
 app.delete = function(url, cb) app.serve(url, 'DELETE', cb)
 end
 
+app.ws = {
+   defined = false,
+   clients = WebSocket.clients
+}
+
+app.ws.serve = function(url, cb)
+   if not app.ws.defined then
+      async.http.listen = WebSocket.listen
+      app.ws.defined = true
+   end
+   app.get(url, function(req, res)
+      local ws = WebSocket(req, res)
+      local ok, err = pcall(cb, ws) -- define onopen/onmessage/onpong/onclose
+      ok, err = ws:open()
+      if not ok then
+         app.abort(400, err, req, res)
+         return nil
+      end
+   end)
+end
+
+setmetatable(app.ws, {
+   __call = function(self, url, cb)
+      app.ws.serve(url, cb)
+   end
+})
+
 app.error = function(errorCode, cb)
    assert(errorCode ~= nil and async.http.codes[errorCode] ~= nil)
    assert(cb ~= nil)
@@ -163,11 +184,11 @@ app.abort = function(errorCode, description, req, res)
    else
       res.setStatus(errorCode)
       res.setHeader('Content-Type', 'text/html')
-      res.send(string.format(
-[[<html>
-<head></head>
-<body><h1>Error: %d</h1><p>%s</p></body>
-</html>]], errorCode, async.http.codes[errorCode]))
+      res.send(html { body {
+         h1 'Error: ${code}' % { code = errorCode },
+         p(async.http.codes[errorCode]),
+         p(description) 
+      }})
    end
 end
 
@@ -179,7 +200,7 @@ app.repl = function(options)
    print(string.format('REPL listening on %s:%s', host, port))
 end
 
-app.CmdLine = function()
+app.CmdLine = function(args)
    local cmd = torch.CmdLine()
    cmd:text()
    cmd:text('Waffle Command Line')
@@ -201,7 +222,7 @@ app.CmdLine = function()
    cmd:option('--cachesize', 20, 'Size of URL cache')
    cmd:option('--autocache', false, 'Automatically cache response body, headers, and status code if true')
    cmd:text()
-   local opt = cmd:parse(arg or {})
+   local opt = cmd:parse(args or arg or {})
    app.session(opt.session, opt)
    return app(opt)
 end
