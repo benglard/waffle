@@ -156,10 +156,10 @@ app.ws.serve = function(url, cb)
    end
    app.get(url, function(req, res)
       local ws = WebSocket(req, res)
-      local ok, err = pcall(cb, ws) -- define onopen/onmessage/onpong/onclose
+      local ok, err = pcall(cb, ws) -- implement ws methods
       ok, err = ws:open()
       if not ok then
-         app.abort(400, err, req, res)
+         app.abort(500, err, req, res)
          return nil
       end
    end)

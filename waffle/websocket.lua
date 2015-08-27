@@ -25,7 +25,6 @@ local bor = bit.bor
 local bxor = bit.bxor
 local lshift = bit.lshift
 local rshift = bit.rshift
-local tohex = bit.tohex
 local concat = table.concat
 local rand = math.random
 
@@ -43,7 +42,7 @@ local StringPointer = function(s)
    self.receive = function(_, n)
       local p = self.p
       local c = p + n
-      local rv = s:sub(p, c - 1)
+      local rv = sub(s, p, c - 1)
       self.p = c
       return rv
    end
@@ -277,17 +276,9 @@ local _send_frame = function(ws, fin, opcode, payload, maxlen, mask)
 end
 
 local _open = function(self)
+   self.opened = true
    local req = self.request
    local res = self.response
-
-   local clients = WebSocket.clients[req.url.path]
-   local ws
-   for i = 1, #clients do
-      local c = clients[i]
-      if c and c.request == req then ws = c
-      end
-   end
-   ws.opened = true
 
    local status = true
    local err = ''
@@ -321,7 +312,7 @@ local _open = function(self)
       res.status(101).send('')
    else
       res.status(403).send(err)
-      ws.opened = false
+      self.opened = false
       return status, err
    end
 
@@ -334,13 +325,13 @@ local _open = function(self)
             code = code
          }
          if dtype == 'close' then
-            ws:close()
+            self:close()
          elseif dtype == 'pong' then
-            ws.onpong(rv)
+            self.onpong(rv)
          else
-            ws.onmessage(rv)
+            self.onmessage(rv)
          end
-      else ws:close(code or 1002, msg)
+      else self:close(code or 1002, msg)
       end
    end)
 
