@@ -196,21 +196,18 @@ end)
 app.ws('/ws', function(ws)
    ws.checkorigin = function(origin) return origin == 'http://127.0.0.1:8080'
    end
-
-   ws.onopen = function(req) print('/ws/opened')
-   end
-
+   
+   ws.onopen = function(req) print('/ws/opened') end
+   
    ws.onmessage = function(data)
       print(data)
       ws:write('World')
       ws:ping('test')
    end
 
-   ws.onpong = function(data) print(data)
-   end
-
-   ws.onclose = function(req) print('/ws/closed')
-   end
+   ws.onpong = function(data) print(data) end
+   
+   ws.onclose = function(req) print('/ws/closed') end
 end)
 ```
 
@@ -329,13 +326,13 @@ th> async.go()
 
 The wafflemaker executable can be used:
 
-1. to create project directories in MVC style, like so:
+* to create project directories in MVC style, like so:
 
 ```
 wafflemaker --create name_of_project
 ```
 
-2. to serve static files akin to running ```python -m SimpleHTTPServer```, but with much, much, much better performance (almost 20x requests/sec).
+* to serve static files akin to running ```python -m SimpleHTTPServer```, but with much, much, much better performance (almost 20x requests/sec).
 
 ```
 cd folder/i/want/to/serve
