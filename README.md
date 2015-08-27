@@ -194,19 +194,14 @@ app.get('/', function(req, res)
 end)
 
 app.ws('/ws', function(ws)
-   ws.checkorigin = function(origin) return origin == 'http://127.0.0.1:8080'
-   end
-   
+   ws.checkorigin = function(origin) return origin == 'http://127.0.0.1:8080' end
    ws.onopen = function(req) print('/ws/opened') end
-   
    ws.onmessage = function(data)
       print(data)
       ws:write('World')
       ws:ping('test')
    end
-
    ws.onpong = function(data) print(data) end
-   
    ws.onclose = function(req) print('/ws/closed') end
 end)
 ```

@@ -396,8 +396,8 @@ WebSocket.new = function(req, res)
       
       checkorigin = function(o) return true end,
       onopen    = function(r) end,
-      onmessage = function(m, t, c) end,
-      onpong    = function(p) end,
+      onmessage = function(d) end,
+      onpong    = function(d) end,
       onclose   = function(r) end,
       
       open  = _open,
