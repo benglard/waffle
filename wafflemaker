@@ -22,6 +22,13 @@ if opt.serve then
       print(route)
       app.get(route, function(req, res) res.sendFile(file) end)
       nroutes = nroutes + 1
+
+      if route == '/index.html' then
+         route = '/'
+         print(route)
+         app.get(route, function(req, res) res.sendFile(file) end)
+         nroutes = nroutes + 1
+      end
    end
    app{
       debug = true,

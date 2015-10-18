@@ -9,7 +9,7 @@ app.get('/', function(req, res)
 <body>Hello</body>
 </html>
    ]]
-end)
+end, 'index')
 
 app.post('/', function(req, res)
    res.send('Posting...')
@@ -25,7 +25,7 @@ end)
 
 app.get('/test', function(req, res)
    res.send('Hello World!')
-end)
+end, 'test')
 
 app.get('/html', function(req, res)
    res.sendFile('./examples/index.html')
@@ -42,6 +42,12 @@ end)
 app.get('/lua', function(req, res)
    res.sendFile('./examples/demo.lua')
 end)
+
+app.get('/user/(%a+)/(%d+)', function(req, res)
+   local name = req.params[1]
+   local idx = req.params[2]
+   res.send(string.format('Hello, %s, %d', name, idx))
+end, 'user.name.index')
 
 app.get('/user/(%d+)', function(req, res)
    local userId = tonumber(req.params[1])
@@ -92,5 +98,9 @@ app.error(500, function(description, req, res)
       res.status(500).send('500 Error')
    end
 end)
+
+print(app.urlfor('index'))
+print(app.urlfor('test'))
+print(app.urlfor('user.name.index', { ['(%a+)'] = 'Lua', ['(%d+)'] = 1 }))
 
 app.listen()

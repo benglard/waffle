@@ -24,4 +24,21 @@ encodings.urldecode = function(url)
    return rv
 end
 
+encodings.uuid4 = function()
+   local rv = {}
+   local rand = math.random
+   local format = string.format
+
+   local map = { '8', '9', 'a', 'b' }
+   local y = map[rand(1, 4)]
+
+   rv[1] = format('%08x', rand(0, 4294967295))       -- 2**32 - 1
+   rv[2] = format('%04x', rand(0, 65535))            -- 2**16 - 1
+   rv[3] = format('4%03x', rand(0, 4095))            -- 2**12 - 1
+   rv[4] = format('%s%03x', y, rand(0, 4095))        -- 2**12 - 1
+   rv[5] = format('%012x', rand(0, 281474976710656)) -- 2**48 - 1
+
+   return table.concat(rv, '-')
+end
+
 return encodings

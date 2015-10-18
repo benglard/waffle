@@ -9,6 +9,10 @@ local Cache     = require 'waffle.cache'
 local Session   = require 'waffle.session'
 local WebSocket = require 'waffle.websocket'
 
+local _httpverbs = {
+   'head', 'get', 'post', 'delete', 'patch', 'put', 'options'
+}
+
 local app = {}
 app.viewFuncs  = {}
 app.errorFuncs = {}
@@ -36,7 +40,9 @@ app.set = function(field, value)
    end
 end
 
-local _handle = function(request, handler)
+local _handle = function(request, handler, client)
+   request.socket = client
+
    local url = request.url.path
    local method = request.method
    local delim = ''
@@ -59,6 +65,7 @@ local _handle = function(request, handler)
          request.params = cache.match
          request.url.args = cache.args
          wrequest(request)
+         app.session:start(request, response)
          cache.cb(request, response)
       end
       return nil
@@ -82,6 +89,7 @@ local _handle = function(request, handler)
             end
          end
          wrequest(request)
+         app.session:start(request, response)
 
          if funcs[method] then
             local ok, err = pcall(funcs[method], request, response)
@@ -121,7 +129,7 @@ app.listen = function(options)
    async.go()
 end
 
-app.serve = function(url, method, cb)
+app.serve = function(url, method, cb, name)
    utils.stringassert(url)
    utils.stringassert(method)
    assert(cb ~= nil)
@@ -129,31 +137,45 @@ app.serve = function(url, method, cb)
    if app.viewFuncs[url] == nil then
       app.viewFuncs[url] = {}
    end
-   app.viewFuncs[url][method] = cb
+   app.viewFuncs[url][method] = setmetatable(
+      { name = name },
+      { __call = function(_, ...) return cb(...) end }
+   )
 end
 
-app.get = function(url, cb) app.serve(url, 'GET', cb)
+for _, verb in pairs(_httpverbs) do
+   app[verb] = function(url, cb, name)
+      app.serve(url, verb:upper(), cb, name)
+   end
 end
 
-app.post = function(url, cb) app.serve(url, 'POST', cb)
+app.urlfor = function(search, replacements)
+   for pattern, funcs in pairs(app.viewFuncs) do
+      for verb, handlers in pairs(funcs) do
+         local name = handlers.name
+         if name ~= nil and name == search then
+            if replacements == nil then
+               return pattern
+            else
+               local gsub = string.gsub
+               local find = '[%%%]%^%-$().[*+?]'
+               local replace = '%%%1'
+
+               for key, value in pairs(replacements) do
+                  local search = gsub(key, find, replace)
+                  pattern = gsub(pattern, search, value)
+               end
+
+               return pattern
+            end
+         end
+      end
+   end
 end
 
-app.put = function(url, cb) app.serve(url, 'PUT', cb)
-end
-
-app.delete = function(url, cb) app.serve(url, 'DELETE', cb)
-end
-
-app.ws = {
-   defined = false,
-   clients = WebSocket.clients
-}
+app.ws = { clients = WebSocket.clients }
 
 app.ws.serve = function(url, cb)
-   if not app.ws.defined then
-      async.http.listen = WebSocket.listen
-      app.ws.defined = true
-   end
    app.get(url, function(req, res)
       local ws = WebSocket(req, res)
       local ok, err = pcall(cb, ws) -- implement ws methods
@@ -214,17 +236,34 @@ app.CmdLine = function(args)
    cmd:option('--replhost', '127.0.0.1', 'Host IP on which to recieve REPL requests')
    cmd:option('--replport', '8081', 'Host Port on which to recieve REPL requests')
    cmd:option('--print', false, 'Print the method and url of every request if true')
-   cmd:option('--session', 'cache', 'Type of session: cache | redis')
-   cmd:option('--sessionsize', 1000, 'Size of session (only valid for cached sessions)')
+   cmd:option('--session', 'memory', 'Type of session: memory | redis')
    cmd:option('--redishost', '127.0.0.1', 'Redis host (only valid for redis sessions)')
    cmd:option('--redisport', '6379', 'Redis port (only valid for redis sessions)')
-   cmd:option('--redisprefix', 'waffle-', 'Redis key prefix (only valid for redis sessions)')
+   cmd:option('--redisprefix', 'waffle', 'Redis key prefix (only valid for redis sessions)')
    cmd:option('--cachesize', 20, 'Size of URL cache')
    cmd:option('--autocache', false, 'Automatically cache response body, headers, and status code if true')
    cmd:text()
    local opt = cmd:parse(args or arg or {})
    app.session(opt.session, opt)
    return app(opt)
+end
+
+app.module = function(urlprefix, modname)
+   utils.stringassert(urlprefix)
+   utils.stringassert(modname)
+
+   local mod = {}
+   local format = string.format
+
+   for _, verb in pairs(_httpverbs) do
+      mod[verb] = function(url, cb, name)
+         local fullurl = format('%s%s', urlprefix, url)
+         local fullname = format('%s.%s', modname, name)
+         app[verb](fullurl, cb, fullname)
+         return mod
+      end
+   end
+   return mod
 end
 
 setmetatable(app, {

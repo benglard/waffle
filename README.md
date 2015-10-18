@@ -251,20 +251,21 @@ end)
 Waffle has both in-memory and redis sessions using [redis-async](https://github.com/ocallaco/redis-async).
 
 ```lua
-local app = require('waffle')
-app.session('redis')
+local app = require('../waffle').CmdLine()
 
 app.get('/', function(req, res)
-   app.session:get('n', function(n)
-      if n == nil then n = 0 end
-      n = tonumber(n)
+   if app.session.type == 'memory' then
+      local n = app.session.n or 0
       res.send('#' .. n)
-      if n > 19 then
-         app.session:delete('n')
-      else
-         app.session.n = n + 1
-      end
-   end)
+      if n > 19 then app.session.n = nil
+      else app.session.n = n + 1 end
+   else
+      app.session:get('n', function(n)
+         res.send('#' .. n)
+         if n > 19 then app.session:delete('n')
+         else app.session.n = n + 1 end
+      end, 0)
+   end
 end)
 
 app.listen()
@@ -275,6 +276,30 @@ app.listen()
 app.get('/', function(req, res)
    res.json{test=true}
 end)
+```
+
+## urlfor and Modules
+
+```lua
+-- Add a name parameter, e.g. 'test'
+app.get('/test', function(req, res) res.send('Hello World!') end, 'test')
+
+-- Retreive url corresponding to route named 'test'
+local url = app.urlfor('test')
+```
+
+Modules let you group routes together by url and name (really by function)
+
+```lua
+app.module('/', 'home') -- Home Routes
+   .get('',     function(req, res) res.send 'Home' end, 'index')
+   .get('test', function(req, res) res.send 'Test' end, 'test')
+
+app.module('/auth', 'auth') -- Authentication Routes
+   .get('', function(req, res) res.redirect(app.urlfor('auth.login'))
+      end, 'index')
+   .get('/login',  function(req, res) res.send 'Login'  end, 'login')
+   .get('/signup', function(req, res) res.send 'Signup' end, 'signup')
 ```
 
 ## Command Line Options
@@ -364,6 +389,4 @@ app.listen()
 ## TODO
 * Named URL route parameters
 * Automatic caching of static files
-* Testing
-* Documentation
-* more?
+* Secure cookies & cookie based sessions
