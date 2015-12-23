@@ -7,16 +7,10 @@ Thank you very much @agentzh
 local encodings = require 'waffle.encodings'
 local bit = require 'bit'
 
-local async = require 'async'
-local tcp = require 'async.tcp'
-local newHttpParser = require 'lhttp_parser'.new
-local parseUrl = require 'lhttp_parser'.parseUrl
-
 local WebSocket = {}
 WebSocket.clients = {}
 
 local magic = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
-local http = async.http
 local byte = string.byte
 local char = string.char
 local sub = string.sub

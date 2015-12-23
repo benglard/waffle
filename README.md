@@ -157,6 +157,13 @@ app.post('/m', function(req, res)
 end)
 ```
 
+You can transform an uploaded image into a torch Tensor like so: (from ```examples/tensor.lua```)
+
+```lua
+local gm = require 'graphicsmagick'
+local img = gm.Image():fromString(req.form.file.data):toTensor()
+```
+
 ## Websockets
 
 To implement a websocket server, call app.ws with a url path and a function accepting a single table. You can then define checkorigin, onopen, onmessage, onpong, and onclose for that table, to control the server-side websocket connection.
