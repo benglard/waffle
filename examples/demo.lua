@@ -86,6 +86,10 @@ app.get('/cookie/clear', function(req, res)
    res.send('Deleting cookies ...')
 end)
 
+app.get('/clientip', function(req, res)
+   res.send(req.ip)
+end)
+
 app.error(404, function(description, req, res)
    local url = string.format('%s%s', req.headers.host, req.url.path)
    res.status(404).send('No page found at ' .. url)

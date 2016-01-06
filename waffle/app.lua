@@ -42,6 +42,7 @@ end
 
 local _handle = function(request, handler, client)
    request.socket = client
+   request.ip = client.peername.address
 
    local url = request.url.path
    local method = request.method
@@ -120,7 +121,7 @@ local _handle = function(request, handler, client)
    app.abort(404, 'Not Found', request, response)
 end
 
-app.listen = function(options)
+app.listen = function(options, cb)
    local options = options or {}
    local host = options.host or app.host or '127.0.0.1'
    local port = options.port or app.port or '8080'

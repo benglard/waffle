@@ -4,7 +4,6 @@ uploaded image into a torch Tensor.
 ]]
 
 local app = require 'waffle'
-local gm = require 'graphicsmagick'
 
 app.get('/', function(req, res)
    res.send(html { body { form {
@@ -22,10 +21,7 @@ app.get('/', function(req, res)
 end)
 
 app.post('/', function(req, res)
-   local img = gm.Image()
-      :fromString(req.form.file.data)
-      :toTensor()
-      :float()
+   local img = req.form.file:toImage()
    local m = img:mean()
    res.send('Image mean: ' .. m)
 end)

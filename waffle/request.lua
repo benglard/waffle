@@ -1,5 +1,6 @@
 local async = require 'async'
 local encodings = require 'waffle.encodings'
+local gmOk, gm = pcall(require, 'graphicsmagick')
 local afs = async.fs
 
 local _getcookies = function(self)
@@ -29,6 +30,20 @@ local _save = function(self, options, cb)
    end)
 end
 
+local _totensor = function(self, ...)
+   if gmOk then
+      return gm.Image()
+         :fromString(self.data)
+         :toTensor(...)
+   else
+      return nil
+   end
+end
+
+local _toimage = function(self, ...)
+   return _totensor(self, 'float','RGB','DHW')
+end
+
 local _getform = function(self)
    self.form = {}
    if self.body ~= '' then
@@ -47,7 +62,9 @@ local _getform = function(self)
                   type = ctype,
                   filename = value.filename,
                   binary = binary,
-                  save = _save
+                  save = _save,
+                  toTensor = _totensor,
+                  toImage = _toimage
                }
             end
          end

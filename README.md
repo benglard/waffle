@@ -157,11 +157,14 @@ app.post('/m', function(req, res)
 end)
 ```
 
-You can transform an uploaded image into a torch Tensor like so: (from ```examples/tensor.lua```)
+With [graphicsmagick](https://github.com/clementfarabet/graphicsmagick) installed, an uploaded image can be transformed into a typical torch tensor like so:
 
 ```lua
-local gm = require 'graphicsmagick'
-local img = gm.Image():fromString(req.form.file.data):toTensor()
+app.post('/', function(req, res)
+   local img = req.form.file:toImage()
+   local m = img:mean()
+   res.send('Image mean: ' .. m)
+end)
 ```
 
 ## Websockets
