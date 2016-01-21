@@ -40,12 +40,15 @@ local _totensor = function(self, ...)
    end
 end
 
-local _toimage = function(self, ...)
+local _toimage = function(self)
    return _totensor(self, 'float','RGB','DHW')
 end
 
 local _getform = function(self)
    self.form = {}
+   local isjson = self.headers['content-type'] == 'application/json'
+   if isjson then return end
+
    if self.body ~= '' then
       local rbody = self.body
       if type(rbody) == 'table' then

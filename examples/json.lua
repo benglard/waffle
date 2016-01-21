@@ -35,6 +35,28 @@ app.get('/user/(%d+)', function(req, res)
    end
 end)
 
+app.get('/ajax', function(req, res)
+   res.send(html { body {
+      h1 'AJAX',
+      script { src = 'https://code.jquery.com/jquery-git2.min.js' },
+      script [[
+$.ajax({
+   type: "POST",
+   url: "/ajax",
+   contentType: "application/json",
+   data: JSON.stringify({ test: true }),
+   dataType: "json"
+})
+.done(function(data) { console.log(data); })
+.fail(function() { console.log("error"); });]]
+   }})
+end)
+
+app.post('/ajax', function(req, res)
+   local test = req.body.test
+   res.json{ success = test }
+end)
+
 app.repl()
 app.listen()
 
