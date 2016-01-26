@@ -82,7 +82,7 @@ local _recv_frame = function(frame, maxlen, forcemask)
          return false, 'failed to receive the 2 byte payload length: ' .. err
       end
       payloadlen = bor(lshift(byte(data, 1), 8), byte(data, 2))
-   elseif payload_len == 127 then
+   elseif payloadlen == 127 then
       local data, err = frame:receive(8)
       if not data then
          return false, 'failed to receive the 8 byte payload length: ' .. err
