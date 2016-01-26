@@ -106,10 +106,9 @@ session.set = function(self, name, value)
       local sid = self:sessionid()
       local db = self.data[sid]
       if db == nil then
-         self.data[sid] = { name = value }
-      else
-         self.data[sid][name] = value
+         self.data[sid] = {}
       end
+      self.data[sid][name] = value
    else
       local sid = self:rediskey()
       value = _SERIALIZE(value)
