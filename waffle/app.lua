@@ -60,9 +60,9 @@ local _handle = function(request, handler, client)
    local cache = app.urlCache[fullURL]
    if cache ~= nil then
       if app.autocache and cache.response.body ~= '' then
-         response.load(cache.response, response.resend, handler)
+         response.load(cache.response, response.resend, handler, client)
       else
-         response.new(handler)
+         response.new(handler, client)
          request.params = cache.match
          request.url.args = cache.args
          wrequest(request)
@@ -72,7 +72,7 @@ local _handle = function(request, handler, client)
       return nil
    end
 
-   response.new(handler)
+   response.new(handler, client)
 
    for pattern, funcs in pairs(app.viewFuncs) do
       local match = {string.match(url, pattern)}
@@ -94,6 +94,7 @@ local _handle = function(request, handler, client)
 
          if funcs[method] then
             local ok, err = pcall(funcs[method], request, response)
+
             if ok then
                local data = {
                   match = match,

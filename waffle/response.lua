@@ -1,14 +1,17 @@
 local async = require 'async'
 local paths = require 'waffle.paths'
 local utils = require 'waffle.utils'
+local fs = async.fs
+
 local response = {}
 response.templates = ''
 
-response.new = function(handler)
+response.new = function(handler, socket)
    response.body = ''
    response.headers = {}
    response.statusCode = 200
    response.handler = handler or function(body, headers, statusCode) end
+   response.socket = socket
    return response
 end
 
@@ -32,9 +35,10 @@ response.send = function(content)
    response.body = content
 end
 
-response.resend = function(handler)
+response.resend = function(handler, socket)
    handler(response.body, response.headers, response.statusCode)
    response.handler = handler
+   response.socket = socket
 end
 
 response.setHandler = function(handler)
@@ -64,8 +68,34 @@ response.redirect = function(url)
 end
 
 response.sendFile = function(path)
-   async.fs.readFile(path, function(content)
-      response.send(content)
+   local client = response.socket
+   local _close = function(fd)
+      client.close()
+      fs.close(fd)
+   end
+
+   fs.open(path, 'r', '666', function(fd)
+      local length = fs.bufferSize
+      local offset = 0
+      local function read()
+         fs.read(fd, length, offset, function(data, err)
+            if data == nil or err ~= nil then
+               _close(fd)
+               return
+            end
+
+            local ld = #data
+            if ld == 0 or ld > length then
+               _close(fd)
+               return
+            end
+
+            offset = offset + length
+            client.write(data)
+            read()
+         end)
+      end
+      read()
    end)
 end
 
@@ -74,7 +104,7 @@ response.render = function(path, args, folder)
    local templates = response.templates or folder or ''
    local fname = paths.add(templates, path)
    response.setHeader('Content-Type', 'text/html')
-   async.fs.readFile(fname, function(content)
+   fs.readFile(fname, function(content)
       response.send(content % args)
    end)
 end
