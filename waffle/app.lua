@@ -122,13 +122,26 @@ local _handle = function(request, handler, client)
    app.abort(404, 'Not Found', request, response)
 end
 
-app.listen = function(options)
+app.listen = function(options, fn, interval)
    local options = options or {}
    local host = options.host or app.host or '127.0.0.1'
    local port = options.port or app.port or '8080'
    async.http.listen({host=host, port=port}, _handle)
    print(string.format('Listening on %s:%s', host, port))
-   async.go()
+   if fn then
+      -- run fn on event loop every interval ms
+      -- useful for say, clearing jobs running on a separate thread pool
+      interval = interval or 1
+      local to = require('async.time').setTimeout
+      local function cycle()
+         fn()
+         to(interval, cycle)
+      end
+      cycle()
+      require('luv').run('default')
+   else
+      async.go()
+   end
 end
 
 app.serve = function(url, method, cb, name)
