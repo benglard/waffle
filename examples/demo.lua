@@ -1,7 +1,11 @@
+local to = require('async').setTimeout
 local app = require('../waffle')
+
 app.set('debug', true)
+app.print = true
 
 app.get('/', function(req, res)
+   print(req)
    res.header('Content-Type', 'text/html')
    res.send[[
 <html>
@@ -88,6 +92,12 @@ end)
 
 app.get('/clientip', function(req, res)
    res.send(req.ip)
+end)
+
+app.get('/wait', function(req, res)
+   to(1000, function()
+      req:finish('hello')
+   end)
 end)
 
 app.error(404, function(description, req, res)

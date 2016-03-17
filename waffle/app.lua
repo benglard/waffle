@@ -3,8 +3,8 @@ local utils = require 'waffle.utils'
 local paths = require 'waffle.paths'
 string.gsplit = utils.iterator(string.split)
 
-local response  = require 'waffle.response'
-local wrequest  = require 'waffle.request'
+local Request   = require 'waffle.request'
+local Response  = require 'waffle.response'
 local Cache     = require 'waffle.cache'
 local Session   = require 'waffle.session'
 local WebSocket = require 'waffle.websocket'
@@ -22,7 +22,7 @@ app.session    = Session
 
 app.set = function(field, value)
    app.properties[field] = value
-
+   
    if field == 'public' then
       for file in paths.gwalk(value) do
          local route = file
@@ -34,7 +34,7 @@ app.set = function(field, value)
          end)
       end
    elseif field == 'templates' then
-      response.templates = value
+      Response.templates = value
    elseif field == 'cachesize' then
       app.urlCache.size = value
    end
@@ -60,19 +60,19 @@ local _handle = function(request, handler, client)
    local cache = app.urlCache[fullURL]
    if cache ~= nil then
       if app.autocache and cache.response.body ~= '' then
-         response.load(cache.response, response.resend, handler, client)
+         Response.resend(cache.response, handler)
       else
-         response.new(handler, client)
          request.params = cache.match
          request.url.args = cache.args
-         wrequest(request)
+         Request(request)
+         local response = Response(handler, client)
          app.session:start(request, response)
          cache.cb(request, response)
       end
       return nil
    end
 
-   response.new(handler, client)
+   local response = Response(handler, client)
 
    for pattern, funcs in pairs(app.viewFuncs) do
       local match = {string.match(url, pattern)}
@@ -89,12 +89,11 @@ local _handle = function(request, handler, client)
                request.url.args[arg[1]] = arg[2]
             end
          end
-         wrequest(request)
+         Request(request)
          app.session:start(request, response)
 
          if funcs[method] then
             local ok, err = pcall(funcs[method], request, response)
-
             if ok then
                local data = {
                   match = match,
@@ -281,7 +280,7 @@ app.module = function(urlprefix, modname)
    return mod
 end
 
-setmetatable(app, {
+return setmetatable(app, {
    __call = function(self, options)
       options = options or {}
       for k, v in pairs(options) do
@@ -291,7 +290,8 @@ setmetatable(app, {
    end,
    __index = function(self, idx)
       return app.properties[idx]
+   end,
+   __newindex = function(self, key, value)
+      app.set(key, value)
    end
 })
-
-return app

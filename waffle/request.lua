@@ -2,6 +2,7 @@ local async = require 'async'
 local encodings = require 'waffle.encodings'
 local gmOk, gm = pcall(require, 'graphicsmagick')
 local afs = async.fs
+local http_codes = async.http.codes
 
 local _getcookies = function(self)
    self.cookies = {}
@@ -81,8 +82,56 @@ local _getform = function(self)
    end
 end
 
+local _finish = function(self, body, headers, statusCode)
+   local client = self.socket
+   local parser = self.parser
+   local keepAlive = self.should_keep_alive
+
+   local statusCode = statusCode or 200
+   local reasonPhrase = http_codes[statusCode]
+
+   if type(body) == 'table' then
+      body = table.concat(body)
+   end
+   local length = #body
+
+   local head = {
+      string.format('HTTP/1.1 %s %s\r\n', statusCode, reasonPhrase)
+   }
+   headers = headers or {['Content-Type']='text/plain'}
+   headers['Date'] = os.date('!%a, %d %b %Y %H:%M:%S GMT')
+   headers['Server'] = 'ASyNC'
+   if not (headers['Transfer-Encoding']
+      and headers['Transfer-Encoding'] == 'chunked') then
+      headers['Content-Length'] = length
+   end
+
+   for key, value in pairs(headers) do
+      if type(key) == 'number' then
+         table.insert(head, value)
+         table.insert(head, '\r\n')
+      else
+         local entry = string.format('%s: %s\r\n', key, value)
+         table.insert(head, entry)
+      end
+   end
+
+   table.insert(head, '\r\n')
+   table.insert(head, body)
+   client.write(table.concat(head))
+
+   if keepAlive then
+      parser:reinitialize('request')
+      parser:finish()
+   else
+      parser:finish()
+      client.close()
+   end
+end
+
 return function(req)
    _getcookies(req)
    _getform(req)
+   req.finish = _finish
    return req
 end

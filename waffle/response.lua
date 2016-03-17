@@ -1,18 +1,14 @@
 local async = require 'async'
 local paths = require 'waffle.paths'
 local utils = require 'waffle.utils'
+
 local fs = async.fs
+local _jencode = async.json.encode
 
-local response = {}
-response.templates = ''
+local response = { templates = '' }
 
-response.new = function(handler, socket)
-   response.body = ''
-   response.headers = {}
-   response.statusCode = 200
-   response.handler = handler or function(body, headers, statusCode) end
-   response.socket = socket
-   return response
+response.resend = function(other, handler)
+   handler(other.body, other.headers, other.statusCode)
 end
 
 response.save = function()
@@ -23,26 +19,9 @@ response.save = function()
    }
 end
 
-response.load = function(data, cb, ...)
-   response.body = data.body
-   response.headers = data.headers
-   response.statusCode = data.statusCode
-   if cb ~= nil then cb(...) end
-end
-
 response.send = function(content)
    response.handler(content, response.headers, response.statusCode)
    response.body = content
-end
-
-response.resend = function(handler, socket)
-   handler(response.body, response.headers, response.statusCode)
-   response.handler = handler
-   response.socket = socket
-end
-
-response.setHandler = function(handler)
-   response.handler = handler
 end
 
 response.setHeader = function(name, value)
@@ -58,19 +37,16 @@ end
 response.status = response.setStatus
 
 response.location = function(url)
-   response.setHeader('Location', url)
+   return response.setHeader('Location', url)
 end
 
 response.redirect = function(url)
-   response.setStatus(302)
-   response.location(url)
-   response.send('')
+   response.setStatus(302).location(url).send('')
 end
 
 response.sendFile = function(path)
-   local client = response.socket
    local _close = function(fd)
-      client.close()
+      response.finish()
       fs.close(fd)
    end
 
@@ -91,7 +67,7 @@ response.sendFile = function(path)
             end
 
             offset = offset + length
-            client.write(data)
+            response.write(data)
             read()
          end)
       end
@@ -103,7 +79,7 @@ response.render = function(path, args, folder)
    args = args or {}
    local templates = response.templates or folder or ''
    local fname = paths.add(templates, path)
-   response.setHeader('Content-Type', 'text/html')
+   response.header('Content-Type', 'text/html')
    fs.readFile(fname, function(content)
       response.send(content % args)
    end)
@@ -113,18 +89,17 @@ response.htmlua = function(path, args, folder)
    args = args or {}
    local templates = response.templates or folder or ''
    local fname = paths.add(templates, path)
-   response.setHeader('Content-Type', 'text/html')
+   response.header('Content-Type', 'text/html')
    render(fname, args, response.send)
 end
 
 response.json = function(content)
-   response.setHeader('Content-Type', 'application/json')
-   response.send(async.json.encode(content))
+   response.header('Content-Type', 'application/json').send(_jencode(content))
 end
 
 response.cookie = {}
 
-response.cookie.set = function(name, val, options)
+local _cookie_set = function(name, val, options)
    options = options or {}
    local path = options.path or '/'
    local expires = ''
@@ -137,25 +112,35 @@ response.cookie.set = function(name, val, options)
       val = async.json.encode(val)
    end
    local cookie = string.format('%s=%s;%sPath=%s', name, val, expires, path)
-   response.setHeader('Set-Cookie', cookie)
+   response.header('Set-Cookie', cookie)
 end
+response.cookie.set = _cookie_set
 
-response.cookie.delete = function(name)
+local _cookie_delete = function(name)
    local cstr = '%s=;expires=Thu, 01 Jan 1970 00:00:00 UTC;Path="/"'
    local cookie = string.format(cstr, name)
-   response.setHeader('Set-Cookie', cookie)
+   response.header('Set-Cookie', cookie)
 end
+response.cookie.delete = _cookie_delete
 
 response.cookie.clear = function(cookies)
    for name, val in pairs(cookies) do
-      response.cookie.delete(name)
+      _cookie_delete(name)
    end
 end
 
 setmetatable(response.cookie, {
-   __call = function(self, ...)
-      response.cookie.set(...)
-   end,
+   __call = function(self, ...) _cookie_set(...) end
 })
 
-return response
+local _new_response = function(self, handler, socket)
+   self.body = ''
+   self.headers = {}
+   self.statusCode = 200
+   self.handler = handler
+   self.write = socket.write
+   self.finish = socket.close
+   return self
+end
+
+return setmetatable(response, { __call = _new_response })

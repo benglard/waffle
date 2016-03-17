@@ -266,7 +266,7 @@ local _send_frame = function(ws, fin, opcode, payload, maxlen, mask)
       return false, 'failed to build frame: ' .. err
    end
 
-   ws.request.socket.write(frame)
+   ws.response.write(frame)
 end
 
 local _open = function(self)
@@ -359,7 +359,7 @@ local _close = function(self, code, msg)
             band(code, 0xff)) .. (msg or '')
       end
       ok, err = pcall(_send_frame, self, true, 0x8, payload)
-      self.request.socket.close()
+      self.response.finish()
 
       local clients = WebSocket.clients[self.request.url.path]
       for i = 1, #clients do
