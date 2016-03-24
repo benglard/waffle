@@ -45,8 +45,11 @@ response.redirect = function(url)
 end
 
 response.sendFile = function(path)
+   local sockwrite = response.write
+   local sockfinish = response.finish
+
    local _close = function(fd)
-      response.finish()
+      sockfinish()
       fs.close(fd)
    end
 
@@ -67,7 +70,7 @@ response.sendFile = function(path)
             end
 
             offset = offset + length
-            response.write(data)
+            sockwrite(data)
             read()
          end)
       end
