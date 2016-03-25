@@ -32,12 +32,12 @@ local types = {
 }
 
 local StringPointer = function(s)
-   local self = { p = 1, s = s }
+   local self = {}
+   local p = 1
    self.receive = function(_, n)
-      local p = self.p
       local c = p + n
       local rv = sub(s, p, c - 1)
-      self.p = c
+      p = c
       return rv
    end
    return self
@@ -266,7 +266,7 @@ local _send_frame = function(ws, fin, opcode, payload, maxlen, mask)
       return false, 'failed to build frame: ' .. err
    end
 
-   ws.response.write(frame)
+   ws.request.socket.write(frame)
 end
 
 local _open = function(self)
@@ -325,7 +325,8 @@ local _open = function(self)
          else
             self.onmessage(rv)
          end
-      else self:close(code or 1002, msg)
+      else
+         self:close(code or 1002, msg)
       end
    end)
 
@@ -359,7 +360,7 @@ local _close = function(self, code, msg)
             band(code, 0xff)) .. (msg or '')
       end
       ok, err = pcall(_send_frame, self, true, 0x8, payload)
-      self.response.finish()
+      self.request.socket.close()
 
       local clients = WebSocket.clients[self.request.url.path]
       for i = 1, #clients do
@@ -391,12 +392,13 @@ WebSocket.new = function(req, res)
       close = _close,
    }
 
-   local clients = WebSocket.clients[req.url.path]
+   local path = req.url.path
+   local clients = WebSocket.clients[path]
    if clients == nil then
-      WebSocket.clients[req.url.path] = {rv}
+      WebSocket.clients[path] = {rv}
    else
       local nc = #clients
-      WebSocket.clients[req.url.path][nc + 1] = rv
+      WebSocket.clients[path][nc + 1] = rv
    end
    return rv
 end
