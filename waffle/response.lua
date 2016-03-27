@@ -4,6 +4,7 @@ local utils = require 'waffle.utils'
 
 local fs = async.fs
 local _jencode = async.json.encode
+local http_codes = async.http.codes
 
 local response = { templates = '' }
 
@@ -47,6 +48,28 @@ end
 response.sendFile = function(path)
    local sockwrite = response.write
    local sockfinish = response.finish
+
+   local statusCode = response.statusCode
+   local reasonPhrase = http_codes[statusCode]
+   local head = {
+      string.format('HTTP/1.1 %s %s\r\n', statusCode, reasonPhrase)
+   }
+   local headers = response.headers
+   headers['Date'] = os.date('!%a, %d %b %Y %H:%M:%S GMT')
+   headers['Server'] = 'ASyNC'
+
+   for key, value in pairs(headers) do
+      if type(key) == 'number' then
+         table.insert(head, value)
+         table.insert(head, '\r\n')
+      else
+         local entry = string.format('%s: %s\r\n', key, value)
+         table.insert(head, entry)
+      end
+   end
+
+   table.insert(head, '\r\n')
+   sockwrite(table.concat(head))
 
    local _close = function(fd)
       sockfinish()

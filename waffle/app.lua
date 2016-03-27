@@ -9,6 +9,7 @@ local Cache     = require 'waffle.cache'
 local Session   = require 'waffle.session'
 local WebSocket = require 'waffle.websocket'
 
+local http_codes = async.http.codes
 local _httpverbs = {
    'head', 'get', 'post', 'delete', 'patch', 'put', 'options'
 }
@@ -208,7 +209,7 @@ setmetatable(app.ws, {
 })
 
 app.error = function(errorCode, cb)
-   assert(errorCode ~= nil and async.http.codes[errorCode] ~= nil)
+   assert(errorCode ~= nil and http_codes[errorCode] ~= nil)
    assert(cb ~= nil)
    app.errorFuncs[errorCode] = cb
 end
@@ -222,7 +223,7 @@ app.abort = function(errorCode, description, req, res)
       res.setHeader('Content-Type', 'text/html')
       res.send(html { body {
          h1 'Error: ${code}' % { code = errorCode },
-         p(async.http.codes[errorCode]),
+         p(http_codes[errorCode]),
          p(description) 
       }})
    end

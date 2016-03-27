@@ -44,7 +44,8 @@ app.get('/redir', function(req, res)
 end)
 
 app.get('/lua', function(req, res)
-   res.sendFile('./examples/demo.lua')
+   res.header('Content-Type', 'text/plain')
+      .sendFile('./examples/demo.lua')
 end)
 
 app.get('/user/(%a+)/(%d+)', function(req, res)
