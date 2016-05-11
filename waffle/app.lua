@@ -202,6 +202,15 @@ app.ws.serve = function(url, cb)
    end)
 end
 
+app.ws.broadcast = function(url, msg)
+   local clients = app.ws.clients[url]
+   if clients ~= nil then
+      for i=1,#clients do
+         clients[i]:write(msg)
+      end
+   end
+end
+
 setmetatable(app.ws, {
    __call = function(self, url, cb)
       app.ws.serve(url, cb)
