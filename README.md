@@ -216,6 +216,18 @@ app.ws('/ws', function(ws)
 end)
 ```
 
+You can broadcast a message to all open websockets on a url like this:
+
+```lua
+ws:broadcast('message')
+```
+
+or like this:
+
+```lua
+app.ws.broadcast(req.url.path, 'message')
+```
+
 ## Query Paramaters
 ```lua
 app.get('/search', function(req, res)
