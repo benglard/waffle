@@ -76,7 +76,9 @@ local _getform = function(self)
          -- URL Encoded
          for param in string.gsplit(rbody, '&') do
             local arg = string.split(param, '=')
-            self.form[arg[1]] = encodings.urldecode(arg[2])
+            if #arg > 0 then
+                self.form[arg[1]] = encodings.urldecode(arg[2])
+            end
          end
       end
    end
