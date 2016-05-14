@@ -330,7 +330,7 @@ local _open = function(self)
       end
    end)
 
-   return pcall(self.onopen, self.req)
+   return pcall(self.onopen, req)
 end
 
 local _write = function(self, data, binary)
@@ -374,6 +374,17 @@ local _close = function(self, code, msg)
    return ok, err
 end
 
+local _broadcast = function(self, ...)
+   local url = self.request.url.path
+   local clients = WebSocket.clients[url]
+   if clients ~= nil then
+      for i = 1, #clients do
+         local c = clients[i]
+         if c ~= nil then c:write(...) end
+      end
+   end
+end
+
 WebSocket.new = function(req, res)
    local rv = {
       request  = req,
@@ -390,6 +401,8 @@ WebSocket.new = function(req, res)
       write = _write,
       ping  = _ping,
       close = _close,
+
+      broadcast = _broadcast
    }
 
    local path = req.url.path
