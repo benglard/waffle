@@ -1,4 +1,3 @@
-local ffi = require 'ffi'
 local async = require 'async'
 local encodings = require 'waffle.encodings'
 local gmOk, gm = pcall(require, 'image')
@@ -34,9 +33,13 @@ end
 
 local _totensor = function(self, ...)
    if gmOk then
-     local b = torch.ByteTensor(string.len(self.data))
-     ffi.copy(b:data(), self.data, b:size(1))
-     return image.decompress(b, 3, 'float')
+     local data = torch.ByteTensor(torch.ByteStorage():string(self.data))
+     local ok, img = pcall(image.decompress, data)
+     if ok then
+       return img
+     else
+       return nil
+     end
    else
       return nil
    end
