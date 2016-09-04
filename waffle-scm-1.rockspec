@@ -16,7 +16,8 @@ dependencies = {
    'paths >= 1.0',
    'buffer',
    'async',
-   'redis-async'
+   'redis-async',
+   'image'
 }
 
 build = {

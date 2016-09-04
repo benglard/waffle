@@ -1,5 +1,6 @@
 -- package
 require 'xlua'
+require 'image'
 
 local ok, html = pcall(require, 'htmlua')
 local msg = [[
