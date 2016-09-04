@@ -1,6 +1,5 @@
 local async = require 'async'
 local encodings = require 'waffle.encodings'
-local gmOk, gm = pcall(require, 'image')
 local afs = async.fs
 local http_codes = async.http.codes
 
@@ -31,22 +30,14 @@ local _save = function(self, options, cb)
    end)
 end
 
-local _totensor = function(self, ...)
-   if gmOk then
-     local data = torch.ByteTensor(torch.ByteStorage():string(self.data))
-     local ok, img = pcall(image.decompress, data)
-     if ok then
-       return img
-     else
-       return nil
-     end
-   else
-      return nil
-   end
+local _totensor = function(self)
+   return torch.ByteTensor(torch.ByteStorage():string(self.data))
 end
 
 local _toimage = function(self)
-   return _totensor(self, 'float','RGB','DHW')
+   local data = _totensor(self)
+   local ok, img = pcall(image.decompress, data)
+   if ok then return img else return nil end
 end
 
 local _getform = function(self)

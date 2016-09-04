@@ -2,13 +2,13 @@ package = 'waffle'
 version = 'scm-1'
 
 source = {
-   url = 'git://github.com/christopher5106/waffle',
+   url = 'git://github.com/benglard/waffle',
 }
 
 description = {
    summary = 'Fast, asynchronous web framework for Lua/Torch',
    detailed = [[Waffle is a fast, asynchronous, express-inspired web framework for Lua/Torch]],
-   homepage = 'https://github.com/christopher5106/waffle'
+   homepage = 'https://github.com/benglard/waffle'
 }
 
 dependencies = {
@@ -16,7 +16,8 @@ dependencies = {
    'paths >= 1.0',
    'buffer',
    'async',
-   'redis-async'
+   'redis-async',
+   'image'
 }
 
 build = {
