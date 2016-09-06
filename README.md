@@ -157,7 +157,7 @@ app.post('/m', function(req, res)
 end)
 ```
 
-With [graphicsmagick](https://github.com/clementfarabet/graphicsmagick) installed, an uploaded image can be transformed into a typical torch tensor like so:
+You can easily transform an uploaded image into a typical torch tensor like so:
 
 ```lua
 app.post('/', function(req, res)

@@ -35,8 +35,7 @@ local _totensor = function(self)
 end
 
 local _toimage = function(self)
-   local data = _totensor(self)
-   local ok, img = pcall(image.decompress, data)
+   local ok, img = pcall(image.decompress, _totensor(self))
    if ok then return img else return nil end
 end
 
